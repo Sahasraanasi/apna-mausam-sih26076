@@ -3733,3 +3733,70 @@ body,
     max-height: calc(100svh - 16px) !important;
   }
 }
+/* =========================================================
+   EMERGENCY MODE
+   ========================================================= */
+
+.emergency-mode-card {
+  margin: 0 16px 18px;
+  padding: 20px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  border-radius: 24px;
+  background: linear-gradient(
+    135deg,
+    #fff1f2,
+    #ffe4e6
+  );
+  border: 2px solid #fda4af;
+  box-shadow:
+    0 18px 45px rgba(190, 24, 93, 0.16);
+}
+
+.emergency-mode-icon {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #be123c;
+  color: white;
+  font-size: 24px;
+}
+
+.emergency-mode-content {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.emergency-mode-label {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #be123c;
+}
+
+.emergency-mode-content h2 {
+  margin: 0;
+  color: #881337;
+  font-size: 22px;
+}
+
+.emergency-mode-content p {
+  margin: 0;
+  color: #4c0519;
+  line-height: 1.6;
+}
+
+.emergency-mode-content strong {
+  color: #881337;
+}
+
+.emergency-mode-content small {
+  color: #9f1239;
+  line-height: 1.5;
+}

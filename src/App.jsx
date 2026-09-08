@@ -1,5 +1,9 @@
 import { useState } from "react";
+import { assessSafety } from "./utils/safetyAssessment";
 import "./App.css";
+import {
+  rankPersonalizationItems,
+} from "./personalizationEngine"
 
 /* =========================================================
    INTERESTS
@@ -405,6 +409,14 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+  const safetyAssessment =
+  assessSafety({
+    selectedScenario,
+    weather,
+  });
+
+const emergencyMode =
+  safetyAssessment.isEmergency;
 
   /* =========================================================
      INTEREST NAMES
@@ -2200,6 +2212,37 @@ function App() {
   if (screen === "home") {
     return (
       <main className="weather-home">
+      {emergencyMode && (
+        <section className="emergency-mode-card">
+          <div className="emergency-mode-icon">
+            ⚠️
+          </div>
+
+          <div className="emergency-mode-content">
+            <span className="emergency-mode-label">
+              EMERGENCY MODE
+            </span>
+
+            <h2>
+              {safetyAssessment.title}
+            </h2>
+
+            <p>
+              {safetyAssessment.message}
+            </p>
+
+            <strong>
+              {safetyAssessment.action}
+            </strong>
+
+            <small>
+              Safety Override is active and takes priority
+              over personalization.
+            </small>
+          </div>
+        </section>
+      )}
+
 
         {/* HEADER */}
 
