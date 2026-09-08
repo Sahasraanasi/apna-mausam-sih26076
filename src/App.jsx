@@ -1,4 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  loadProfile,
+  saveProfile,
+} from "./offlinePrivacy";
 import "./App.css";
 
 /* =========================================================
@@ -325,8 +329,33 @@ function App() {
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
 
+  useEffect(() => {
+    const savedProfile = loadProfile();
+
+    if (!savedProfile) {
+      return;
+    }
+
+    if (typeof savedProfile.userName === "string") {
+      setUserName(savedProfile.userName);
+    }
+
+    if (Array.isArray(savedProfile.selectedInterests)) {
+      setSelectedInterests(
+        savedProfile.selectedInterests
+      );
+    }
+
+    if (typeof savedProfile.selectedLocation === "string") {
+      setSelectedLocation(
+        savedProfile.selectedLocation
+      );
+    }
+  }, []);
+
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
+
 
   const [showAssistant, setShowAssistant] =
     useState(false);
