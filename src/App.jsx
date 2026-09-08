@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import {
   loadProfile,
   saveProfile,
@@ -329,7 +330,11 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [isOffline, setIsOffline] =
+    useState(!navigator.onLine);
 
+  const [lastSyncedAt, setLastSyncedAt] =
+    useState(null);
   useEffect(() => {
     const savedProfile = loadProfile();
 
@@ -353,7 +358,22 @@ function App() {
       );
     }
   }, []);
-    useEffect(() => {
+
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
     saveProfile({
       userName,
       selectedInterests,
@@ -448,13 +468,17 @@ function App() {
         : baseWeather.icon,
   };
 
-  useEffect(() => {
+   useEffect(() => {
+    const savedAt = new Date().toISOString();
+
     saveWeatherCache({
       location: selectedLocation,
       scenario: selectedScenario,
       weather,
-      savedAt: new Date().toISOString(),
+      savedAt,
     });
+
+    setLastSyncedAt(savedAt);
   }, [selectedLocation, selectedScenario]);
 
   /* =========================================================
@@ -2072,7 +2096,7 @@ function App() {
         </div>
 
         <div className="route-point">
-          🏢
+          🚗
         </div>
       </div>
 
