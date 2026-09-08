@@ -1,10 +1,14 @@
 import { evaluateSafetyState } from "./safetyEngine";
 import { useState } from "react";
 import { assessSafety } from "./utils/safetyAssessment";
+import {
+  loadWeatherCache,
+  saveWeatherCache,
+} from "./offlinePrivacy";
 import "./App.css";
 import {
   rankPersonalizationItems,
-} from "./personalizationEngine"
+} from "./personalizationEngine";
 
 /* =========================================================
    INTERESTS
@@ -329,7 +333,6 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
-
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
 
@@ -415,6 +418,15 @@ function App() {
     selectedScenario,
     weather,
   });
+
+  useEffect(() => {
+    saveWeatherCache({
+      location: selectedLocation,
+      scenario: selectedScenario,
+      weather,
+      savedAt: new Date().toISOString(),
+    });
+  }, [selectedLocation, selectedScenario]);
 
   /* =========================================================
      INTEREST NAMES
