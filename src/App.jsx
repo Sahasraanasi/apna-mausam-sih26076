@@ -1411,6 +1411,15 @@ function App() {
       priority: "NORMAL",
     };
   };
+  /* =========================================================
+   SAFETY OVERRIDE ENGINE
+   Deterministic safety decision — always above personalization
+   ========================================================= */
+
+const safetyOverride =
+  selectedScenario === "severe";
+
+const emergencyMode = safetyOverride;
 
   const smartAlert = getSmartAlert();
 
@@ -2200,6 +2209,39 @@ function App() {
   if (screen === "home") {
     return (
       <main className="weather-home">
+              {emergencyMode && (
+          <section className="emergency-mode-banner">
+            <div className="emergency-mode-icon">
+              ⚠️
+            </div>
+
+            <div className="emergency-mode-content">
+              <span className="emergency-mode-label">
+                EMERGENCY MODE
+              </span>
+
+              <h2>
+                Severe weather requires your attention
+              </h2>
+
+              <p>
+                Safety guidance is taking priority over
+                personalized recommendations.
+              </p>
+
+              <div className="emergency-mode-actions">
+                <strong>
+                  Stay indoors where possible.
+                </strong>
+
+                <span>
+                  Monitor official weather alerts and
+                  follow local safety guidance.
+                </span>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* HEADER */}
 

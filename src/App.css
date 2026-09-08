@@ -3733,3 +3733,82 @@ body,
     max-height: calc(100svh - 16px) !important;
   }
 }
+/* =========================================================
+   EMERGENCY MODE
+   ========================================================= */
+
+.emergency-mode-banner {
+  margin: 0 16px 18px;
+  padding: 22px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+  border-radius: 24px;
+  border: 2px solid #dc2626;
+  background: #fef2f2;
+  box-shadow: 0 18px 45px rgba(127, 29, 29, 0.16);
+}
+
+.emergency-mode-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: #dc2626;
+  color: white;
+  font-size: 24px;
+}
+
+.emergency-mode-content {
+  flex: 1;
+}
+
+.emergency-mode-label {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #b91c1c;
+}
+
+.emergency-mode-content h2 {
+  margin: 6px 0 8px;
+  color: #7f1d1d;
+  font-size: 22px;
+}
+
+.emergency-mode-content p {
+  margin: 0;
+  color: #450a0a;
+  line-height: 1.6;
+}
+
+.emergency-mode-actions {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #fecaca;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.emergency-mode-actions strong {
+  color: #991b1b;
+}
+
+.emergency-mode-actions span {
+  color: #7f1d1d;
+  font-size: 14px;
+}
+
+@media (max-width: 600px) {
+  .emergency-mode-banner {
+    padding: 18px;
+  }
+
+  .emergency-mode-content h2 {
+    font-size: 19px;
+  }
+}
