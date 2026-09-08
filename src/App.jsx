@@ -352,6 +352,17 @@ function App() {
       );
     }
   }, []);
+    useEffect(() => {
+    saveProfile({
+      userName,
+      selectedInterests,
+      selectedLocation,
+    });
+  }, [
+    userName,
+    selectedInterests,
+    selectedLocation,
+  ]);
 
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
