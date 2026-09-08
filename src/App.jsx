@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
 import {
   loadProfile,
   saveProfile,
+  loadWeatherCache,
+  saveWeatherCache,
 } from "./offlinePrivacy";
 import "./App.css";
 
@@ -364,6 +365,7 @@ function App() {
     selectedLocation,
   ]);
 
+
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
 
@@ -445,6 +447,15 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+
+  useEffect(() => {
+    saveWeatherCache({
+      location: selectedLocation,
+      scenario: selectedScenario,
+      weather,
+      savedAt: new Date().toISOString(),
+    });
+  }, [selectedLocation, selectedScenario]);
 
   /* =========================================================
      INTEREST NAMES
