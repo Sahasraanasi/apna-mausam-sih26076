@@ -2999,6 +2999,14 @@ const getImpactScore = (type) => {
               : ""}{" "}
             👋
           </p>
+          {isOffline && (
+            <p className="offline-status">
+              📡 Offline — showing cached weather
+              {lastSyncedAt
+                ? ` • Last synced ${new Date(lastSyncedAt).toLocaleString()}`
+                : ""}
+            </p>
+          )}
 
           <h1>
             Here's your weather.
