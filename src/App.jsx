@@ -1,5 +1,5 @@
 import { evaluateSafetyState } from "./safetyEngine";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { assessSafety } from "./utils/safetyAssessment";
 import {
   loadWeatherCache,
@@ -414,10 +414,15 @@ function App() {
         : baseWeather.icon,
   };
   const safetyAssessment =
-  assessSafety({
-    selectedScenario,
-    weather,
-  });
+    assessSafety({
+      selectedScenario,
+      weather,
+    });
+
+  const displayedWeather =
+    isOffline && cachedWeather
+      ? cachedWeather
+      : weather;
 
   useEffect(() => {
     saveWeatherCache({
