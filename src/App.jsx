@@ -3004,6 +3004,81 @@ const getImpactScore = (type) => {
           </p>
 
         </section>
+{/* WHY AM I SEEING THIS */}
+
+<section className="why-seeing-card">
+
+  <div className="why-seeing-header">
+    <div>
+      <p className="card-label">WHY AM I SEEING THIS?</p>
+      <h2>Personalized for your situation</h2>
+    </div>
+
+    <span className="why-seeing-icon">ⓘ</span>
+  </div>
+
+  <div className="why-seeing-reasons">
+
+    <div className="why-reason">
+      <span>📍</span>
+      <div>
+        <strong>Location</strong>
+        <p>{selectedLocation}</p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🌦️</span>
+      <div>
+        <strong>Current conditions</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Severe weather conditions"
+            : selectedScenario === "rain"
+            ? "Rain-affected conditions"
+            : `${weather.condition} conditions`}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🎯</span>
+      <div>
+        <strong>Your interests</strong>
+        <p>
+          {interestNames.length > 0
+            ? interestNames.slice(0, 2).join(" + ")
+            : "General weather information"}
+          {interestNames.length > 2 ? " + more" : ""}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>⚠️</span>
+      <div>
+        <strong>Weather impact</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Safety information is prioritized"
+            : weather.rain >= 60
+            ? "Rain may affect outdoor plans"
+            : weather.temperature >= 35
+            ? "High temperature may affect outdoor activity"
+            : "Conditions are currently stable"}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <p className="why-seeing-note">
+    Recommendations are based on your selected interests and current weather conditions.
+  </p>
+
+</section>
+```
+
 
         {/* PERSONALIZATION ENGINE */}
 

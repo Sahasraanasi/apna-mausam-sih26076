@@ -4105,3 +4105,203 @@ body,
   font-size: 10px;
   line-height: 1.5;
 }
+/* =========================================================
+   WHY AM I SEEING THIS
+   ========================================================= */
+
+.why-seeing-card {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.why-seeing-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.why-seeing-header h2 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.why-seeing-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.why-seeing-reasons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.why-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.why-reason > span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.why-reason strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+
+.why-reason p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+.why-seeing-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.6;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .why-seeing-card {
+    padding: 16px;
+  }
+
+  .why-seeing-reasons {
+    grid-template-columns: 1fr;
+  }
+
+  .why-seeing-header h2 {
+    font-size: 17px;
+  }
+}
+/* =========================================================
+   PERSONALIZED ADVICE CARD
+   ========================================================= */
+
+.daily-advice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-top: 20px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(100, 110, 150, 0.08);
+  box-shadow: 0 12px 30px rgba(40, 50, 90, 0.06);
+}
+
+.daily-advice-card .advice-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: #f0edff;
+  font-size: 23px;
+}
+
+.daily-advice-card .card-label {
+  margin: 0 0 5px;
+  color: #7b849a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.daily-advice-card h2 {
+  margin: 0;
+  color: #17213f;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.daily-advice-card > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-advice-card > div:last-child > p:last-child {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .daily-advice-card {
+    gap: 13px;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .daily-advice-card .advice-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 13px;
+    font-size: 20px;
+  }
+
+  .daily-advice-card h2 {
+    font-size: 19px;
+  }
+
+  .daily-advice-card > div:last-child > p:last-child {
+    font-size: 13px;
+  }
+}
+/* =========================================================
+   TODAY AT A GLANCE - SPACING
+   ========================================================= */
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.summary-grid > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.summary-grid span {
+  display: block;
+  margin: 0;
+  line-height: 1.3;
+}
+
+.summary-grid strong {
+  display: block;
+  line-height: 1.3;
+}
