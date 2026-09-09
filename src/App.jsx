@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+﻿import { useEffect, useState } from "react";
 import {
   loadProfile,
   saveProfile,
@@ -467,6 +467,10 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+  const displayedWeather =
+    isOffline && cachedWeather
+      ? cachedWeather
+      : weather;
 
    useEffect(() => {
     const savedAt = new Date().toISOString();
