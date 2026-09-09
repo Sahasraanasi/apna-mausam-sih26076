@@ -330,6 +330,8 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [locationStatus, setLocationStatus] =
+    useState("");
   const [personalizationEnabled, setPersonalizationEnabled] =
   useState(true);
   const [isOffline, setIsOffline] =
@@ -441,6 +443,30 @@ function App() {
 
   const hasInterest = (id) =>
     selectedInterests.includes(id);
+  const useCurrentLocation = () => {
+  if (!navigator.geolocation) {
+    setLocationStatus(
+      "Location permission is not supported by this browser."
+    );
+    return;
+  }
+
+  setLocationStatus("Requesting your location permission...");
+
+  navigator.geolocation.getCurrentPosition(
+    () => {
+      setSelectedLocation("Hyderabad");
+      setLocationStatus(
+        "✓ Current location permission granted — using Hyderabad demo location."
+      );
+    },
+    () => {
+      setLocationStatus(
+        "Location permission was not granted. You can select a location manually."
+      );
+    }
+  );
+};
 
   /* =========================================================
      WEATHER CONTEXT ENGINE
@@ -2476,6 +2502,19 @@ function App() {
                   )
                 )}
               </select>
+
+              <button
+                type="button"
+                onClick={useCurrentLocation}
+              >
+                📍 Use my current location
+              </button>
+
+              {locationStatus && (
+                <p>
+                  {locationStatus}
+                </p>
+              )}
             </div>
 
           </div>
