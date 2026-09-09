@@ -1,4 +1,18 @@
-import { useState } from "react";
+import { evaluateSafetyState } from "./safetyEngine";
+import { useEffect, useState } from "react";
+import {
+  loadProfile,
+  saveProfile,
+  loadWeatherCache,
+  saveWeatherCache,
+  clearProfile,
+  clearWeatherCache,
+} from "./offlinePrivacy";
+import { assessSafety } from "./utils/safetyAssessment";
+import "./App.css";
+import {
+  rankPersonalizationItems,
+} from "./personalizationEngine";
 import "./App.css";
 
 /* =========================================================
@@ -324,15 +338,82 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [isOffline, setIsOffline] =
+    useState(!navigator.onLine);
+
+  const [lastSyncedAt, setLastSyncedAt] =
+    useState(null);
+  useEffect(() => {
+    const savedProfile = loadProfile();
+
+    if (!savedProfile) {
+      return;
+    }
+
+    if (typeof savedProfile.userName === "string") {
+      setUserName(savedProfile.userName);
+    }
+
+    if (Array.isArray(savedProfile.selectedInterests)) {
+      setSelectedInterests(
+        savedProfile.selectedInterests
+      );
+    }
+
+    if (typeof savedProfile.selectedLocation === "string") {
+      setSelectedLocation(
+        savedProfile.selectedLocation
+      );
+    }
+  }, []);
+
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    saveProfile({
+      userName,
+      selectedInterests,
+      selectedLocation,
+    });
+  }, [
+    userName,
+    selectedInterests,
+    selectedLocation,
+  ]);
+
 
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
+
 
   const [showAssistant, setShowAssistant] =
     useState(false);
 
   const [showAlerts, setShowAlerts] =
     useState(false);
+  const [showPrivacy, setShowPrivacy] =
+  useState(false);
+
+const [personalizationPaused, setPersonalizationPaused] =
+  useState(false);
+
+const [locationEnabled, setLocationEnabled] =
+  useState(true);
+
+const [interactionLearningEnabled, setInteractionLearningEnabled] =
+  useState(true);
 
   const [assistantQuestion, setAssistantQuestion] =
     useState("");
@@ -405,6 +486,24 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+  const safetyAssessment =
+  assessSafety({
+    selectedScenario,
+    weather,
+  });
+
+   useEffect(() => {
+    const savedAt = new Date().toISOString();
+
+    saveWeatherCache({
+      location: selectedLocation,
+      scenario: selectedScenario,
+      weather,
+      savedAt,
+    });
+
+    setLastSyncedAt(savedAt);
+  }, [selectedLocation, selectedScenario]);
 
   /* =========================================================
      INTEREST NAMES
@@ -420,71 +519,286 @@ function App() {
           )?.title
       )
       .filter(Boolean);
+      /* =========================================================
+   PERSONAL WEATHER IMPACT
+   Transparent prototype heuristic — 0 to 100
+   ========================================================= */
+
+const getPersonalImpact = (interestId) => {
+  let score = 20;
+  const reasons = [];
+
+  /* WEATHER SEVERITY */
+  if (selectedScenario === "severe") {
+    score += 40;
+    reasons.push("Severe weather is active");
+  } else if (selectedScenario === "rain") {
+    score += 20;
+    reasons.push("Heavy rain is affecting conditions");
+  }
+
+  /* INTEREST-SPECIFIC WEATHER FACTORS */
+  if (interestId === "health") {
+    if (weather.aqi >= 120) {
+      score += 25;
+      reasons.push("Air quality is elevated");
+    }
+
+    if (weather.humidity >= 75) {
+      score += 10;
+      reasons.push("Humidity is high");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "fitness") {
+    if (weather.temperature >= 30) {
+      score += 20;
+      reasons.push("Temperature is high");
+    }
+
+    if (weather.humidity >= 75) {
+      score += 15;
+      reasons.push("High humidity may increase discomfort");
+    }
+
+    if (weather.wind >= 25) {
+      score += 15;
+      reasons.push("Wind may affect outdoor exercise");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "beach") {
+    if (weather.wind >= 25) {
+      score += 20;
+      reasons.push("Stronger wind may affect water conditions");
+    }
+
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("High rain probability");
+    }
+
+    if (selectedScenario === "severe") {
+      score += 20;
+      reasons.push("Severe conditions make water activities unsafe");
+    }
+  }
+
+  if (interestId === "travel") {
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Rain may disrupt travel");
+    }
+
+    if (weather.visibility <= 5) {
+      score += 20;
+      reasons.push("Visibility is reduced");
+    }
+
+    if (weather.wind >= 25) {
+      score += 10;
+      reasons.push("Wind may affect travel conditions");
+    }
+  }
+
+  if (interestId === "family") {
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Rain may affect outdoor family plans");
+    }
+
+    if (weather.temperature >= 30) {
+      score += 15;
+      reasons.push("Warm conditions may affect comfort");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "agriculture") {
+    if (weather.rain >= 60) {
+      score += 25;
+      reasons.push("Heavy rain may affect field activities");
+    }
+
+    if (weather.wind >= 25) {
+      score += 15;
+      reasons.push("Strong wind may affect agricultural work");
+    }
+  }
+
+  if (interestId === "commute") {
+    if (weather.visibility <= 5) {
+      score += 25;
+      reasons.push("Reduced visibility may affect driving");
+    }
+
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Heavy rain may slow travel");
+    }
+
+    if (weather.wind >= 30) {
+      score += 15;
+      reasons.push("Strong wind may affect driving");
+    }
+  }
+
+  if (interestId === "events") {
+    if (weather.rain >= 60) {
+      score += 25;
+      reasons.push("Rain may disrupt outdoor events");
+    }
+
+    if (weather.wind >= 30) {
+      score += 20;
+      reasons.push("Strong wind may affect event setup");
+    }
+
+    if (weather.temperature >= 32) {
+      score += 15;
+      reasons.push("High temperature may affect guest comfort");
+    }
+  }
+
+  /* SELECTED INTEREST = DIRECT PERSONAL RELEVANCE */
+  if (selectedInterests.includes(interestId)) {
+    score += 10;
+    reasons.push("Matches your selected interest");
+  }
+
+  /* SAFETY OVERRIDE ALWAYS WINS */
+ 
+  score = Math.min(100, score);
+
+  let status = "Low";
+
+  if (score >= 75) {
+    status = "Critical";
+  } else if (score >= 55) {
+    status = "High";
+  } else if (score >= 35) {
+    status = "Moderate";
+  }
+
+  return {
+    score,
+    status,
+    reasons:
+      reasons.length > 0
+        ? reasons
+        : ["Current weather has limited impact on this interest"],
+  };
+};
 
   /* =========================================================
      PERSONALIZATION PRIORITY
      ========================================================= */
 
   const getDynamicPriorityOrder = () => {
-    const normalPriority = [
-      ...selectedInterests,
-      ...interests
-        .map((interest) => interest.id)
-        .filter(
-          (id) =>
-            !selectedInterests.includes(id)
-        ),
-    ];
+    const scoredInterests = interests.map((interest) => {
+      const impact = getPersonalImpact(interest.id);
+
+      return {
+        id: interest.id,
+        score: impact.score,
+      };
+    });
 
     const scenarioPriority = {
       severe: [
         "health",
-        "commute",
         "family",
+        "commute",
         "travel",
         "fitness",
         "events",
-        "beach",
         "agriculture",
+        "beach",
       ],
 
       rain: [
         "commute",
         "family",
         "travel",
-        "events",
-        "fitness",
         "health",
+        "fitness",
+        "events",
         "agriculture",
         "beach",
       ],
-
-      normal: normalPriority,
     };
 
-    const preferredOrder =
-      scenarioPriority[selectedScenario] ||
-      normalPriority;
+    const selectedScenarioOrder =
+      scenarioPriority[selectedScenario] || [];
 
-    const selectedFirst = preferredOrder.filter(
-      (id) => selectedInterests.includes(id)
-    );
+    return [...scoredInterests]
+      .sort((a, b) => {
+        const aSelected = selectedInterests.includes(a.id);
+        const bSelected = selectedInterests.includes(b.id);
 
-    const remainingSelected =
-      selectedInterests.filter(
-        (id) => !selectedFirst.includes(id)
-      );
+        /* Safety/scenario priority comes first */
+        const aScenario =
+          selectedScenarioOrder.indexOf(a.id);
+        const bScenario =
+          selectedScenarioOrder.indexOf(b.id);
 
-    return [
-      ...selectedFirst,
-      ...remainingSelected,
-      ...interests
-        .map((interest) => interest.id)
-        .filter(
-          (id) =>
-            !selectedInterests.includes(id)
-        ),
-    ];
+        if (
+          aScenario !== -1 &&
+          bScenario !== -1 &&
+          aScenario !== bScenario
+        ) {
+          return aScenario - bScenario;
+        }
+
+        if (
+          aScenario !== -1 &&
+          bScenario === -1
+        ) {
+          return -1;
+        }
+
+        if (
+          aScenario === -1 &&
+          bScenario !== -1
+        ) {
+          return 1;
+        }
+
+        /* Selected interests win when scores are equal */
+        if (
+          aSelected &&
+          !bSelected &&
+          a.score === b.score
+        ) {
+          return -1;
+        }
+
+        if (
+          !aSelected &&
+          bSelected &&
+          a.score === b.score
+        ) {
+          return 1;
+        }
+
+        /* Higher weather impact score first */
+        return b.score - a.score;
+      })
+      .map((interest) => interest.id);
   };
 
   const priorityOrder =
@@ -1412,6 +1726,94 @@ function App() {
     };
   };
 
+  /* =========================================================
+     SAFETY OVERRIDE ENGINE
+     Deterministic safety decision — always above personalization
+     ========================================================= */
+
+  const safetyState = evaluateSafetyState({
+    scenario: selectedScenario,
+    weather,
+  });
+
+  const safetyOverride = safetyState.active;
+  const emergencyMode = safetyOverride;
+
+  /* =========================================================
+     PERSONAL IMPACT SCORE
+     Decision-support score — not weather prediction
+     ========================================================= */
+const getImpactScore = (type) => {
+  let score = 90;
+
+  if (type === "health") {
+    if (weather.aqi > 120) score -= 30;
+    else if (weather.aqi > 80) score -= 15;
+
+    if (weather.uv >= 8) score -= 20;
+    else if (weather.uv >= 7) score -= 12;
+
+    if (weather.humidity >= 80) score -= 10;
+    else if (weather.humidity >= 75) score -= 5;
+
+    if (selectedScenario === "rain") score -= 5;
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "fitness") {
+    if (weather.temperature >= 35) score -= 30;
+    else if (weather.temperature >= 32) score -= 20;
+    else if (weather.temperature >= 30) score -= 10;
+
+    if (weather.humidity >= 80) score -= 15;
+    else if (weather.humidity >= 75) score -= 8;
+
+    if (weather.uv >= 8) score -= 15;
+    else if (weather.uv >= 7) score -= 8;
+
+    if (weather.wind >= 30) score -= 15;
+    else if (weather.wind >= 25) score -= 8;
+
+    if (weather.rain >= 60) score -= 20;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  if (type === "agriculture") {
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.temperature >= 35) score -= 20;
+    else if (weather.temperature >= 32) score -= 10;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "commute") {
+    if (weather.visibility <= 3) score -= 35;
+    else if (weather.visibility <= 5) score -= 20;
+
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  return Math.max(10, Math.min(100, score));
+};
+
+  /* =========================================================
+     SAFETY OVERRIDE ENGINE
+     Deterministic safety decision — always above personalization
+     ========================================================= */
+
+  
   const smartAlert = getSmartAlert();
 
   /* =========================================================
@@ -1535,9 +1937,12 @@ function App() {
      HEALTH CARD
      ========================================================= */
 
-  const renderHealthCard = () => (
+  const renderHealthCard = () => {
+  const impact = getPersonalImpact("health");
+
+  return (
     <section
-      className="section-block"
+      className={`section-block impact-${impact.status.toLowerCase()}`}
       key="health"
     >
       <div className="section-title-row">
@@ -1628,16 +2033,36 @@ function App() {
           ? "🫁 Air quality is elevated today. Consider reducing prolonged outdoor exposure."
           : "🫁 Air quality is suitable for normal outdoor activity."}
       </div>
+      <div className="impact-score-inline">
+  <div>
+    <span>Personal Health Impact</span>
+    <strong>{getImpactScore("health")}/100</strong>
+  </div>
+
+  <small>
+    {weather.aqi > 120
+      ? "Air quality is the main factor reducing your outdoor comfort."
+      : weather.uv >= 7
+      ? "Higher UV exposure is the main factor affecting outdoor comfort."
+      : weather.humidity >= 75
+      ? "Higher humidity may increase outdoor discomfort."
+      : "Current conditions are generally comfortable for health-focused outdoor activity."}
+  </small>
+</div>
     </section>
   );
+};
 
   /* =========================================================
      FITNESS CARD
      ========================================================= */
 
-  const renderFitnessCard = () => (
+  const renderFitnessCard = () => {
+  const impact = getPersonalImpact("fitness");
+
+  return (
     <section
-      className="feature-card fitness-card"
+      className={`feature-card fitness-card impact-${impact.status.toLowerCase()}`}
       key="fitness"
     >
       <div className="feature-card-top">
@@ -1649,11 +2074,12 @@ function App() {
           FITNESS
         </span>
       </div>
-
       <h2>
         {selectedScenario === "severe"
-          ? "Outdoor workout paused"
-          : "Make the most of your workout window"}
+        ? "Outdoor workout paused"
+        : selectedScenario === "rain"
+        ? "Rain-aware workout plan"
+        : "Make the most of your workout window"}
       </h2>
 
       <div className="activity-window">
@@ -1699,21 +2125,45 @@ function App() {
 
       <p>
         {selectedScenario === "severe"
-          ? "Choose an indoor workout until conditions improve."
-          : weather.uv >= 7
-          ? "Early morning or evening is better because UV levels are high."
-          : "Current conditions are generally suitable for outdoor activity."}
+       ? "Choose an indoor workout until conditions improve."
+      : selectedScenario === "rain"
+      ? "Rain is affecting outdoor activity. Consider an indoor workout or wait for a safer window."
+      : weather.uv >= 7
+      ? "Early morning or evening is better because UV levels are high."
+      : "Current conditions are generally suitable for outdoor activity."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Fitness Impact</span>
+    <strong>{getImpactScore("fitness")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant factor. Indoor exercise is safer."
+      : weather.rain >= 60
+      ? "Rain may disrupt outdoor workouts."
+      : weather.temperature >= 32
+      ? "High temperature may increase exercise discomfort."
+      : weather.uv >= 7
+      ? "UV exposure is elevated. Morning or evening is preferable."
+      : "Conditions are generally suitable for outdoor exercise."}
+  </small>
+</div>
     </section>
   );
+};
 
   /* =========================================================
      BEACH CARD
      ========================================================= */
 
-  const renderBeachCard = () => (
+  const renderBeachCard = () => {
+  const impact = getPersonalImpact("beach");
+
+  return (
     <section
-      className="feature-card beach-card"
+      className={`feature-card beach-card impact-${impact.status.toLowerCase()}`}
       key="beach"
     >
       <div className="feature-card-top">
@@ -1725,6 +2175,11 @@ function App() {
           BEACH
         </span>
       </div>
+      <div className="impact-indicator">
+      <span>Weather impact</span>
+      <strong>{impact.score}/100</strong>
+      <small>{impact.status}</small>
+</div>
 
       <h2>Coastal conditions</h2>
 
@@ -1771,14 +2226,18 @@ function App() {
       </p>
     </section>
   );
+};
 
   /* =========================================================
      TRAVEL CARD
      ========================================================= */
 
-  const renderTravelCard = () => (
+  const renderTravelCard = () => {
+  const impact = getPersonalImpact("travel");
+
+  return (
     <section
-      className="feature-card travel-card"
+      className={`feature-card travel-card impact-${impact.status.toLowerCase()}`}
       key="travel"
     >
       <div className="feature-card-top">
@@ -1791,7 +2250,15 @@ function App() {
         </span>
       </div>
 
+      <div className="impact-indicator">
+        <span>Weather impact</span>
+        <strong>{impact.score}/100</strong>
+        <small>{impact.status}</small>
+      </div>
+
       <h2>Travel weather</h2>
+      
+      
 
       <div className="destination-box">
         <span>📍</span>
@@ -1839,14 +2306,18 @@ function App() {
       </div>
     </section>
   );
+};
 
   /* =========================================================
      FAMILY CARD
      ========================================================= */
 
-  const renderFamilyCard = () => (
+  const renderFamilyCard = () => {
+  const impact = getPersonalImpact("family");
+
+  return (
     <section
-      className="feature-card family-card"
+      className={`feature-card family-card impact-${impact.status.toLowerCase()}`}
       key="family"
     >
       <div className="feature-card-top">
@@ -1920,14 +2391,18 @@ function App() {
       </p>
     </section>
   );
+};
 
   /* =========================================================
      AGRICULTURE CARD
      ========================================================= */
 
-  const renderAgricultureCard = () => (
+  const renderAgricultureCard = () => {
+  const impact = getPersonalImpact("agriculture");
+
+  return (
     <section
-      className="feature-card agriculture-card"
+      className={`feature-card agriculture-card impact-${impact.status.toLowerCase()}`}
       key="agriculture"
     >
       <div className="feature-card-top">
@@ -1987,16 +2462,40 @@ function App() {
           ? "Rain is likely. Monitor drainage and avoid unnecessary irrigation."
           : "Check soil moisture before irrigation or field work."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Agriculture Impact</span>
+    <strong>{getImpactScore("agriculture")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather may affect field activities. Monitor conditions before working outdoors."
+      : weather.rain >= 80
+      ? "Heavy rainfall may disrupt field work and harvesting."
+      : weather.rain >= 60
+      ? "Rain may affect field activities and outdoor work."
+      : weather.temperature >= 35
+      ? "High temperature may increase crop and field-work stress."
+      : weather.wind >= 25
+      ? "Stronger winds may affect outdoor field activities."
+      : "Current simulated conditions are generally manageable for field activities."}
+  </small>
+</div>
     </section>
   );
+};
 
   /* =========================================================
      COMMUTE CARD
      ========================================================= */
 
-  const renderCommuteCard = () => (
+  const renderCommuteCard = () => {
+  const impact = getPersonalImpact("commute");
+
+  return (
     <section
-      className="feature-card commute-card"
+      className={`feature-card commute-card impact-${impact.status.toLowerCase()}`}
       key="commute"
     >
       <div className="feature-card-top">
@@ -2021,7 +2520,7 @@ function App() {
         </div>
 
         <div className="route-point">
-          🏢
+          🚗
         </div>
       </div>
 
@@ -2057,16 +2556,38 @@ function App() {
           ? "Rain may slow traffic. Consider leaving earlier."
           : "Traffic is expected to move normally with good visibility."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Commute Impact</span>
+    <strong>{getImpactScore("commute")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant travel risk. Avoid unnecessary travel."
+      : weather.visibility <= 5
+      ? "Reduced visibility may affect driving conditions."
+      : weather.rain >= 60
+      ? "Heavy rain may slow travel and reduce visibility."
+      : weather.wind >= 25
+      ? "Stronger winds may make exposed routes more difficult."
+      : "Current simulated conditions are generally manageable for commuting."}
+  </small>
+</div>
     </section>
   );
+};
 
   /* =========================================================
      EVENTS CARD
      ========================================================= */
 
-  const renderEventsCard = () => (
+  const renderEventsCard = () => {
+  const impact = getPersonalImpact("events");
+
+  return (
     <section
-      className="feature-card events-card"
+      className={`feature-card events-card impact-${impact.status.toLowerCase()}`}
       key="events"
     >
       <div className="feature-card-top">
@@ -2173,6 +2694,7 @@ function App() {
       </div>
     </section>
   );
+};
 
   /* =========================================================
      PERSONALIZED CARDS
@@ -2196,16 +2718,286 @@ function App() {
   /* =========================================================
      HOME SCREEN
      ========================================================= */
+  if (screen === "privacy") {
+  return (
+    <main className="personalization-screen">
+      <div className="personalization-content">
 
+        <div className="small-logo">
+          MAUSAM
+        </div>
+
+        <div className="step-indicator">
+          PRIVACY CONTROLS
+        </div>
+
+        <h1>
+          Your data,
+          <span>{" "}your control.</span>
+        </h1>
+
+        <p className="personalization-subtitle">
+          Manage what Mausam remembers and how
+          personalization works.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            marginTop: "24px",
+          }}
+        >
+
+          <div
+            style={{
+              padding: "18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              textAlign: "left",
+            }}
+          >
+            <strong>What Mausam remembers</strong>
+
+            <p
+              style={{
+                margin: "8px 0 0",
+                color: "#64748b",
+                fontSize: "13px",
+                lineHeight: 1.6,
+              }}
+            >
+              Selected interests, location and
+              interaction preferences are stored
+              locally for this prototype.
+            </p>
+          </div>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Pause personalization</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Stop personalized ranking.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={personalizationPaused}
+              onChange={(event) =>
+                setPersonalizationPaused(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Location</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Allow location-based context.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={locationEnabled}
+              onChange={(event) =>
+                setLocationEnabled(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Interaction learning</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Allow interactions to influence ranking.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={interactionLearningEnabled}
+              onChange={(event) =>
+                setInteractionLearningEnabled(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            marginTop: "20px",
+          }}
+        >
+
+          <button
+            className="continue-button"
+            onClick={() => {
+              clearProfile();
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Reset profile
+          </button>
+
+          <button
+            className="continue-button"
+            onClick={() => {
+              clearProfile();
+              clearWeatherCache();
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Delete data
+          </button>
+
+        </div>
+
+        <button
+          onClick={() => setScreen("home")}
+          style={{
+            marginTop: "14px",
+            border: "none",
+            background: "transparent",
+            color: "#64748b",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          ← Back to Mausam
+        </button>
+
+      </div>
+    </main>
+  );
+}
   if (screen === "home") {
     return (
       <main className="weather-home">
+{emergencyMode && (
+  <section className="emergency-mode-card">
+    <div className="emergency-mode-icon">
+      ⚠️
+    </div>
 
+    <div className="emergency-mode-content">
+      <span className="emergency-mode-label">
+        EMERGENCY MODE
+      </span>
+
+      <h2>
+        Severe weather requires your attention
+      </h2>
+
+      <p>
+        {safetyState.message}
+      </p>
+
+      <p>
+        Safety guidance is taking priority over
+        personalized recommendations.
+      </p>
+
+      <div className="emergency-mode-meta">
+        <small>
+          Source: {safetyState.source}
+        </small>
+
+        <small>
+          Valid: {safetyState.validUntil}
+        </small>
+      </div>
+
+      <div className="emergency-mode-actions">
+        <strong>
+          Stay indoors where possible.
+        </strong>
+
+        <span>
+          Monitor official weather alerts and
+          follow local safety guidance.
+        </span>
+      </div>
+    </div>
+  </section>
+)}
         {/* HEADER */}
 
         <header className="weather-header">
 
-          <div>
+         <div>
             <div className="app-logo">
               MAUSAM
             </div>
@@ -2250,6 +3042,14 @@ function App() {
             >
               👤
             </button>
+            <button
+  title="Privacy Controls"
+  onClick={() =>
+    setScreen("privacy")
+  }
+>
+  🔒
+</button>
 
           </div>
 
@@ -2533,6 +3333,81 @@ function App() {
           </p>
 
         </section>
+{/* WHY AM I SEEING THIS */}
+
+<section className="why-seeing-card">
+
+  <div className="why-seeing-header">
+    <div>
+      <p className="card-label">WHY AM I SEEING THIS?</p>
+      <h2>Personalized for your situation</h2>
+    </div>
+
+    <span className="why-seeing-icon">ⓘ</span>
+  </div>
+
+  <div className="why-seeing-reasons">
+
+    <div className="why-reason">
+      <span>📍</span>
+      <div>
+        <strong>Location</strong>
+        <p>{selectedLocation}</p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🌦️</span>
+      <div>
+        <strong>Current conditions</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Severe weather conditions"
+            : selectedScenario === "rain"
+            ? "Rain-affected conditions"
+            : `${weather.condition} conditions`}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🎯</span>
+      <div>
+        <strong>Your interests</strong>
+        <p>
+          {interestNames.length > 0
+            ? interestNames.slice(0, 2).join(" + ")
+            : "General weather information"}
+          {interestNames.length > 2 ? " + more" : ""}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>⚠️</span>
+      <div>
+        <strong>Weather impact</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Safety information is prioritized"
+            : weather.rain >= 60
+            ? "Rain may affect outdoor plans"
+            : weather.temperature >= 35
+            ? "High temperature may affect outdoor activity"
+            : "Conditions are currently stable"}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <p className="why-seeing-note">
+    Recommendations are based on your selected interests and current weather conditions.
+  </p>
+
+</section>
+```
+
 
         {/* PERSONALIZATION ENGINE */}
 
@@ -2650,40 +3525,46 @@ function App() {
           </div>
 
           <div className="weather-metrics">
+  <div className="weather-main-temperature">
+    <span>Temperature</span>
+    <strong>{weather.temperature}°</strong>
+  </div>
 
-            <div>
-              <span>💧</span>
-              <strong>
-                {weather.humidity}%
-              </strong>
-              <small>Humidity</small>
-            </div>
+  <div className="weather-metric-list">
 
-            <div>
-              <span>💨</span>
-              <strong>
-                {weather.wind}
-              </strong>
-              <small>Wind km/h</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💧</span>
+      Humidity
+    </span>
+    <strong>{weather.humidity}%</strong>
+  </div>
 
-            <div>
-              <span>👁️</span>
-              <strong>
-                {weather.visibility}
-              </strong>
-              <small>Visibility</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💨</span>
+      Wind
+    </span>
+    <strong>{weather.wind} km/h</strong>
+  </div>
 
-            <div>
-              <span>🌧️</span>
-              <strong>
-                {weather.rain}%
-              </strong>
-              <small>Rain</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">👁️</span>
+      Visibility
+    </span>
+    <strong>{weather.visibility} km</strong>
+  </div>
 
-          </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">🌧️</span>
+      Rain
+    </span>
+    <strong>{weather.rain}%</strong>
+  </div>
+</div>
+</div>
 
           <p className="weather-smart-message">
             💡{" "}
@@ -2865,6 +3746,11 @@ function App() {
             </div>
 
           </div>
+          <div className="freshness-indicator">
+  <span>Weather data: Demo data</span>
+  <span>•</span>
+  <span>Last updated: Today</span>
+</div>
 
         </section>
 
@@ -3485,6 +4371,7 @@ function App() {
     </main>
 
   );
+
 }
 
 export default App;
