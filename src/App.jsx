@@ -3181,6 +3181,11 @@ const emergencyMode = safetyOverride;
             </div>
 
           </div>
+          <div className="freshness-indicator">
+  <span>Weather data: Demo data</span>
+  <span>•</span>
+  <span>Last updated: Today</span>
+</div>
 
         </section>
 

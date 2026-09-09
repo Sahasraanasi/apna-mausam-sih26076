@@ -3739,78 +3739,66 @@ body,
 
 .emergency-mode-card {
   margin: 0 16px 18px;
-  padding: 22px;
+  padding: 20px;
   display: flex;
   gap: 16px;
   align-items: flex-start;
   border-radius: 24px;
-  border: 2px solid #dc2626;
-  background: #fef2f2;
-  box-shadow: 0 18px 45px rgba(127, 29, 29, 0.16);
+  background: linear-gradient(
+    135deg,
+    #fff1f2,
+    #ffe4e6
+  );
+  border: 2px solid #fda4af;
+  box-shadow:
+    0 18px 45px rgba(190, 24, 93, 0.16);
 }
 
 .emergency-mode-icon {
   width: 48px;
   height: 48px;
-  flex: 0 0 48px;
-  display: grid;
-  place-items: center;
-  border-radius: 14px;
-  background: #dc2626;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: #be123c;
   color: white;
   font-size: 24px;
 }
 
 .emergency-mode-content {
-  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
 }
 
 .emergency-mode-label {
-  display: inline-block;
   font-size: 11px;
-  font-weight: 900;
-  letter-spacing: 0.14em;
-  color: #b91c1c;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #be123c;
 }
 
 .emergency-mode-content h2 {
-  margin: 6px 0 8px;
-  color: #7f1d1d;
+  margin: 0;
+  color: #881337;
   font-size: 22px;
 }
 
 .emergency-mode-content p {
   margin: 0;
-  color: #450a0a;
+  color: #4c0519;
   line-height: 1.6;
 }
 
-.emergency-mode-actions {
-  margin-top: 16px;
-  padding-top: 14px;
-  border-top: 1px solid #fecaca;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.emergency-mode-content strong {
+  color: #881337;
 }
 
-.emergency-mode-actions strong {
-  color: #991b1b;
-}
-
-.emergency-mode-actions span {
-  color: #7f1d1d;
-  font-size: 14px;
-}
-
-@media (max-width: 600px) {
-  .emergency-mode-banner {
-    padding: 18px;
-  }
-
-  .emergency-mode-content h2 {
-    font-size: 19px;
-  }
+.emergency-mode-content small {
+  color: #9f1239;
+  line-height: 1.5;
 }
 .emergency-mode-content {
   min-width: 0;
@@ -3912,34 +3900,48 @@ body,
 }
 
 .weather-metric-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-}
-
-.weather-metric-list > div {
   display: flex;
   flex-direction: column;
+  gap: 12px;
+}
+
+.weather-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 4px;
+  gap: 16px;
+}
+
+.weather-metric-label {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.weather-metric-icon {
+  width: 25px;
+  display: inline-flex !important;
+  align-items: center;
   justify-content: center;
-  min-height: 58px;
-  padding: 10px 13px;
-  border-radius: 14px;
-  background: rgba(255, 255, 255, 0.1);
+  margin: 0 !important;
+  font-size: 19px !important;
+  flex-shrink: 0;
 }
 
-.weather-metric-list span {
-  display: block;
-  margin-bottom: 4px;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 9px;
-  font-weight: 700;
-}
-
-.weather-metric-list strong {
-  display: block;
-  color: #ffffff;
-  font-size: 15px;
-  font-weight: 800;
+.weather-metric-row > strong {
+  display: block !important;
+  margin: 0 0 0 auto !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  white-space: nowrap;
 }
 
 /* Mobile */
@@ -3958,7 +3960,22 @@ body,
   }
 
   .weather-metric-list {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .weather-metric-row {
+    min-height: 42px;
+    padding: 7px 2px;
+  }
+
+  .weather-metric-label {
+    font-size: 16px !important;
+  }
+
+  .weather-metric-row > strong {
+    font-size: 17px !important;
   }
 }
 /* =========================================================
@@ -4047,4 +4064,236 @@ body,
 .impact-critical .impact-indicator small {
   background: #fee2e2;
   color: #991b1b;
+}
+
+/* =========================================================
+   PERSONAL IMPACT SCORES
+   ========================================================= */
+
+.impact-score-inline {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(246, 248, 252, 0.95);
+  border: 1px solid rgba(215, 222, 239, 0.9);
+}
+
+.impact-score-inline > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.impact-score-inline span {
+  color: #707a91;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.impact-score-inline strong {
+  color: #28334f;
+  font-size: 20px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.impact-score-inline small {
+  display: block;
+  margin-top: 6px;
+  color: #858b9f;
+  font-size: 10px;
+  line-height: 1.5;
+}
+/* =========================================================
+   WHY AM I SEEING THIS
+   ========================================================= */
+
+.why-seeing-card {
+  margin-top: 18px;
+  padding: 20px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(10px);
+}
+
+.why-seeing-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.why-seeing-header h2 {
+  margin: 4px 0 0;
+  font-size: 19px;
+  font-weight: 800;
+}
+
+.why-seeing-icon {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  font-size: 17px;
+  flex-shrink: 0;
+}
+
+.why-seeing-reasons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.why-reason {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.why-reason > span {
+  font-size: 18px;
+  line-height: 1;
+}
+
+.why-reason strong {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 3px;
+}
+
+.why-reason p {
+  margin: 0;
+  font-size: 11px;
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+.why-seeing-note {
+  margin: 14px 0 0;
+  font-size: 11px;
+  line-height: 1.5;
+  opacity: 0.6;
+}
+
+/* Mobile */
+
+@media (max-width: 600px) {
+  .why-seeing-card {
+    padding: 16px;
+  }
+
+  .why-seeing-reasons {
+    grid-template-columns: 1fr;
+  }
+
+  .why-seeing-header h2 {
+    font-size: 17px;
+  }
+}
+/* =========================================================
+   PERSONALIZED ADVICE CARD
+   ========================================================= */
+
+.daily-advice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-top: 20px;
+  padding: 22px 24px;
+  border-radius: 22px;
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid rgba(100, 110, 150, 0.08);
+  box-shadow: 0 12px 30px rgba(40, 50, 90, 0.06);
+}
+
+.daily-advice-card .advice-icon {
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  border-radius: 15px;
+  display: grid;
+  place-items: center;
+  background: #f0edff;
+  font-size: 23px;
+}
+
+.daily-advice-card .card-label {
+  margin: 0 0 5px;
+  color: #7b849a;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+}
+
+.daily-advice-card h2 {
+  margin: 0;
+  color: #17213f;
+  font-size: 22px;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.daily-advice-card > div:last-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.daily-advice-card > div:last-child > p:last-child {
+  margin: 8px 0 0;
+  color: #667085;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .daily-advice-card {
+    gap: 13px;
+    padding: 18px;
+    border-radius: 18px;
+  }
+
+  .daily-advice-card .advice-icon {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 13px;
+    font-size: 20px;
+  }
+
+  .daily-advice-card h2 {
+    font-size: 19px;
+  }
+
+  .daily-advice-card > div:last-child > p:last-child {
+    font-size: 13px;
+  }
+}
+.freshness-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 14px;
+  font-size: 0.78rem;
+  color: #667085;
+}
+/* Scenario status text spacing */
+.scenario-status > div > strong {
+  display: block;
+  margin-bottom: 6px;
+}
+
+.scenario-status > div > small {
+  display: block;
+  line-height: 1.5;
 }
