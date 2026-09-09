@@ -5,6 +5,8 @@ import {
   saveProfile,
   loadWeatherCache,
   saveWeatherCache,
+  clearProfile,
+  clearWeatherCache,
 } from "./offlinePrivacy";
 import { assessSafety } from "./utils/safetyAssessment";
 import "./App.css";
@@ -401,6 +403,17 @@ function App() {
 
   const [showAlerts, setShowAlerts] =
     useState(false);
+  const [showPrivacy, setShowPrivacy] =
+  useState(false);
+
+const [personalizationPaused, setPersonalizationPaused] =
+  useState(false);
+
+const [locationEnabled, setLocationEnabled] =
+  useState(true);
+
+const [interactionLearningEnabled, setInteractionLearningEnabled] =
+  useState(true);
 
   const [assistantQuestion, setAssistantQuestion] =
     useState("");
@@ -2705,7 +2718,231 @@ const getImpactScore = (type) => {
   /* =========================================================
      HOME SCREEN
      ========================================================= */
+  if (screen === "privacy") {
+  return (
+    <main className="personalization-screen">
+      <div className="personalization-content">
 
+        <div className="small-logo">
+          MAUSAM
+        </div>
+
+        <div className="step-indicator">
+          PRIVACY CONTROLS
+        </div>
+
+        <h1>
+          Your data,
+          <span>{" "}your control.</span>
+        </h1>
+
+        <p className="personalization-subtitle">
+          Manage what Mausam remembers and how
+          personalization works.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            marginTop: "24px",
+          }}
+        >
+
+          <div
+            style={{
+              padding: "18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              textAlign: "left",
+            }}
+          >
+            <strong>What Mausam remembers</strong>
+
+            <p
+              style={{
+                margin: "8px 0 0",
+                color: "#64748b",
+                fontSize: "13px",
+                lineHeight: 1.6,
+              }}
+            >
+              Selected interests, location and
+              interaction preferences are stored
+              locally for this prototype.
+            </p>
+          </div>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Pause personalization</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Stop personalized ranking.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={personalizationPaused}
+              onChange={(event) =>
+                setPersonalizationPaused(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Location</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Allow location-based context.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={locationEnabled}
+              onChange={(event) =>
+                setLocationEnabled(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+          <label
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              cursor: "pointer",
+            }}
+          >
+            <span>
+              <strong>Interaction learning</strong>
+              <small
+                style={{
+                  display: "block",
+                  color: "#64748b",
+                  marginTop: "4px",
+                }}
+              >
+                Allow interactions to influence ranking.
+              </small>
+            </span>
+
+            <input
+              type="checkbox"
+              checked={interactionLearningEnabled}
+              onChange={(event) =>
+                setInteractionLearningEnabled(
+                  event.target.checked
+                )
+              }
+            />
+          </label>
+
+        </div>
+
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            marginTop: "20px",
+          }}
+        >
+
+          <button
+            className="continue-button"
+            onClick={() => {
+              clearProfile();
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Reset profile
+          </button>
+
+          <button
+            className="continue-button"
+            onClick={() => {
+              clearProfile();
+              clearWeatherCache();
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Delete data
+          </button>
+
+        </div>
+
+        <button
+          onClick={() => setScreen("home")}
+          style={{
+            marginTop: "14px",
+            border: "none",
+            background: "transparent",
+            color: "#64748b",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          ← Back to Mausam
+        </button>
+
+      </div>
+    </main>
+  );
+}
   if (screen === "home") {
     return (
       <main className="weather-home">
@@ -2805,6 +3042,14 @@ const getImpactScore = (type) => {
             >
               👤
             </button>
+            <button
+  title="Privacy Controls"
+  onClick={() =>
+    setScreen("privacy")
+  }
+>
+  🔒
+</button>
 
           </div>
 
