@@ -6,6 +6,11 @@ import {
   loadWeatherCache,
   saveWeatherCache,
 } from "./offlinePrivacy";
+import { assessSafety } from "./utils/safetyAssessment";
+import "./App.css";
+import {
+  rankPersonalizationItems,
+} from "./personalizationEngine";
 import "./App.css";
 
 /* =========================================================
@@ -468,6 +473,11 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+  const safetyAssessment =
+  assessSafety({
+    selectedScenario,
+    weather,
+  });
 
    useEffect(() => {
     const savedAt = new Date().toISOString();
@@ -1702,20 +1712,95 @@ const getPersonalImpact = (interestId) => {
       priority: "NORMAL",
     };
   };
+
   /* =========================================================
-   SAFETY OVERRIDE ENGINE
-   Deterministic safety decision — always above personalization
-   ========================================================= */
+     SAFETY OVERRIDE ENGINE
+     Deterministic safety decision — always above personalization
+     ========================================================= */
 
+  const safetyState = evaluateSafetyState({
+    scenario: selectedScenario,
+    weather,
+  });
 
-const safetyState = evaluateSafetyState({
-  scenario: selectedScenario,
-  weather,
-});
+  const safetyOverride = safetyState.active;
+  const emergencyMode = safetyOverride;
 
-const safetyOverride = safetyState.active;
-const emergencyMode = safetyOverride;
+  /* =========================================================
+     PERSONAL IMPACT SCORE
+     Decision-support score — not weather prediction
+     ========================================================= */
+const getImpactScore = (type) => {
+  let score = 90;
 
+  if (type === "health") {
+    if (weather.aqi > 120) score -= 30;
+    else if (weather.aqi > 80) score -= 15;
+
+    if (weather.uv >= 8) score -= 20;
+    else if (weather.uv >= 7) score -= 12;
+
+    if (weather.humidity >= 80) score -= 10;
+    else if (weather.humidity >= 75) score -= 5;
+
+    if (selectedScenario === "rain") score -= 5;
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "fitness") {
+    if (weather.temperature >= 35) score -= 30;
+    else if (weather.temperature >= 32) score -= 20;
+    else if (weather.temperature >= 30) score -= 10;
+
+    if (weather.humidity >= 80) score -= 15;
+    else if (weather.humidity >= 75) score -= 8;
+
+    if (weather.uv >= 8) score -= 15;
+    else if (weather.uv >= 7) score -= 8;
+
+    if (weather.wind >= 30) score -= 15;
+    else if (weather.wind >= 25) score -= 8;
+
+    if (weather.rain >= 60) score -= 20;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  if (type === "agriculture") {
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.temperature >= 35) score -= 20;
+    else if (weather.temperature >= 32) score -= 10;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "commute") {
+    if (weather.visibility <= 3) score -= 35;
+    else if (weather.visibility <= 5) score -= 20;
+
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  return Math.max(10, Math.min(100, score));
+};
+
+  /* =========================================================
+     SAFETY OVERRIDE ENGINE
+     Deterministic safety decision — always above personalization
+     ========================================================= */
+
+  
   const smartAlert = getSmartAlert();
 
   /* =========================================================
@@ -1935,6 +2020,22 @@ const emergencyMode = safetyOverride;
           ? "🫁 Air quality is elevated today. Consider reducing prolonged outdoor exposure."
           : "🫁 Air quality is suitable for normal outdoor activity."}
       </div>
+      <div className="impact-score-inline">
+  <div>
+    <span>Personal Health Impact</span>
+    <strong>{getImpactScore("health")}/100</strong>
+  </div>
+
+  <small>
+    {weather.aqi > 120
+      ? "Air quality is the main factor reducing your outdoor comfort."
+      : weather.uv >= 7
+      ? "Higher UV exposure is the main factor affecting outdoor comfort."
+      : weather.humidity >= 75
+      ? "Higher humidity may increase outdoor discomfort."
+      : "Current conditions are generally comfortable for health-focused outdoor activity."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2018,6 +2119,24 @@ const emergencyMode = safetyOverride;
       ? "Early morning or evening is better because UV levels are high."
       : "Current conditions are generally suitable for outdoor activity."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Fitness Impact</span>
+    <strong>{getImpactScore("fitness")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant factor. Indoor exercise is safer."
+      : weather.rain >= 60
+      ? "Rain may disrupt outdoor workouts."
+      : weather.temperature >= 32
+      ? "High temperature may increase exercise discomfort."
+      : weather.uv >= 7
+      ? "UV exposure is elevated. Morning or evening is preferable."
+      : "Conditions are generally suitable for outdoor exercise."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2330,6 +2449,26 @@ const emergencyMode = safetyOverride;
           ? "Rain is likely. Monitor drainage and avoid unnecessary irrigation."
           : "Check soil moisture before irrigation or field work."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Agriculture Impact</span>
+    <strong>{getImpactScore("agriculture")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather may affect field activities. Monitor conditions before working outdoors."
+      : weather.rain >= 80
+      ? "Heavy rainfall may disrupt field work and harvesting."
+      : weather.rain >= 60
+      ? "Rain may affect field activities and outdoor work."
+      : weather.temperature >= 35
+      ? "High temperature may increase crop and field-work stress."
+      : weather.wind >= 25
+      ? "Stronger winds may affect outdoor field activities."
+      : "Current simulated conditions are generally manageable for field activities."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2404,6 +2543,24 @@ const emergencyMode = safetyOverride;
           ? "Rain may slow traffic. Consider leaving earlier."
           : "Traffic is expected to move normally with good visibility."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Commute Impact</span>
+    <strong>{getImpactScore("commute")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant travel risk. Avoid unnecessary travel."
+      : weather.visibility <= 5
+      ? "Reduced visibility may affect driving conditions."
+      : weather.rain >= 60
+      ? "Heavy rain may slow travel and reduce visibility."
+      : weather.wind >= 25
+      ? "Stronger winds may make exposed routes more difficult."
+      : "Current simulated conditions are generally manageable for commuting."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2552,54 +2709,58 @@ const emergencyMode = safetyOverride;
   if (screen === "home") {
     return (
       <main className="weather-home">
-              {emergencyMode && (
-          <section className="emergency-mode-banner">
-            <div className="emergency-mode-icon">
-              ⚠️
-            </div>
+{emergencyMode && (
+  <section className="emergency-mode-card">
+    <div className="emergency-mode-icon">
+      ⚠️
+    </div>
 
-            <div className="emergency-mode-content">
-              <span className="emergency-mode-label">
-                EMERGENCY MODE
-              </span>
+    <div className="emergency-mode-content">
+      <span className="emergency-mode-label">
+        EMERGENCY MODE
+      </span>
 
-              <h2>
-                Severe weather requires your attention
-              </h2>
+      <h2>
+        Severe weather requires your attention
+      </h2>
 
-              <p>
-                Safety guidance is taking priority over
-                personalized recommendations.
-              </p>
-              <div className="emergency-mode-meta">
-  <small>
-    Source: {safetyState.source}
-  </small>
+      <p>
+        {safetyState.message}
+      </p>
 
-  <small>
-    Valid: {safetyState.validUntil}
-  </small>
-</div>
+      <p>
+        Safety guidance is taking priority over
+        personalized recommendations.
+      </p>
 
-              <div className="emergency-mode-actions">
-                <strong>
-                  Stay indoors where possible.
-                </strong>
+      <div className="emergency-mode-meta">
+        <small>
+          Source: {safetyState.source}
+        </small>
 
-                <span>
-                  Monitor official weather alerts and
-                  follow local safety guidance.
-                </span>
-              </div>
-            </div>
-          </section>
-        )}
+        <small>
+          Valid: {safetyState.validUntil}
+        </small>
+      </div>
 
+      <div className="emergency-mode-actions">
+        <strong>
+          Stay indoors where possible.
+        </strong>
+
+        <span>
+          Monitor official weather alerts and
+          follow local safety guidance.
+        </span>
+      </div>
+    </div>
+  </section>
+)}
         {/* HEADER */}
 
         <header className="weather-header">
 
-          <div>
+         <div>
             <div className="app-logo">
               MAUSAM
             </div>
@@ -2927,6 +3088,81 @@ const emergencyMode = safetyOverride;
           </p>
 
         </section>
+{/* WHY AM I SEEING THIS */}
+
+<section className="why-seeing-card">
+
+  <div className="why-seeing-header">
+    <div>
+      <p className="card-label">WHY AM I SEEING THIS?</p>
+      <h2>Personalized for your situation</h2>
+    </div>
+
+    <span className="why-seeing-icon">ⓘ</span>
+  </div>
+
+  <div className="why-seeing-reasons">
+
+    <div className="why-reason">
+      <span>📍</span>
+      <div>
+        <strong>Location</strong>
+        <p>{selectedLocation}</p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🌦️</span>
+      <div>
+        <strong>Current conditions</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Severe weather conditions"
+            : selectedScenario === "rain"
+            ? "Rain-affected conditions"
+            : `${weather.condition} conditions`}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>🎯</span>
+      <div>
+        <strong>Your interests</strong>
+        <p>
+          {interestNames.length > 0
+            ? interestNames.slice(0, 2).join(" + ")
+            : "General weather information"}
+          {interestNames.length > 2 ? " + more" : ""}
+        </p>
+      </div>
+    </div>
+
+    <div className="why-reason">
+      <span>⚠️</span>
+      <div>
+        <strong>Weather impact</strong>
+        <p>
+          {selectedScenario === "severe"
+            ? "Safety information is prioritized"
+            : weather.rain >= 60
+            ? "Rain may affect outdoor plans"
+            : weather.temperature >= 35
+            ? "High temperature may affect outdoor activity"
+            : "Conditions are currently stable"}
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <p className="why-seeing-note">
+    Recommendations are based on your selected interests and current weather conditions.
+  </p>
+
+</section>
+```
+
 
         {/* PERSONALIZATION ENGINE */}
 
@@ -3050,26 +3286,39 @@ const emergencyMode = safetyOverride;
   </div>
 
   <div className="weather-metric-list">
-    <div>
-      <span>Humidity</span>
-      <strong>{weather.humidity}%</strong>
-    </div>
 
-    <div>
-      <span>Wind</span>
-      <strong>{weather.wind} km/h</strong>
-    </div>
-
-    <div>
-      <span>Visibility</span>
-      <strong>{weather.visibility} km</strong>
-    </div>
-
-    <div>
-      <span>Rain</span>
-      <strong>{weather.rain}%</strong>
-    </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💧</span>
+      Humidity
+    </span>
+    <strong>{weather.humidity}%</strong>
   </div>
+
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💨</span>
+      Wind
+    </span>
+    <strong>{weather.wind} km/h</strong>
+  </div>
+
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">👁️</span>
+      Visibility
+    </span>
+    <strong>{weather.visibility} km</strong>
+  </div>
+
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">🌧️</span>
+      Rain
+    </span>
+    <strong>{weather.rain}%</strong>
+  </div>
+</div>
 </div>
 
           <p className="weather-smart-message">
