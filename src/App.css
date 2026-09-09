@@ -4325,3 +4325,67 @@ body,
   display: block;
   line-height: 1.3;
 }
+/* =========================================================
+   TRAVEL & AGRICULTURE METRIC SPACING
+   ========================================================= */
+
+.travel-stats,
+.farm-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 18px;
+}
+
+.travel-stats > div,
+.farm-stats > div {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.travel-stats strong,
+.farm-stats strong {
+  display: block;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.travel-stats span,
+.farm-stats span {
+  display: block;
+  line-height: 1.3;
+}
+
+/* Main weather metrics */
+
+.weather-metric-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+.weather-metric-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.weather-metric-row strong {
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+/* Agriculture soil moisture */
+
+.soil-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+.soil-header strong {
+  margin-left: auto;
+  white-space: nowrap;
+}
