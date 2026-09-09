@@ -1,5 +1,11 @@
 import { evaluateSafetyState } from "./safetyEngine";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import {
+  loadProfile,
+  saveProfile,
+  loadWeatherCache,
+  saveWeatherCache,
+} from "./offlinePrivacy";
 import "./App.css";
 
 /* =========================================================
@@ -325,9 +331,65 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [isOffline, setIsOffline] =
+    useState(!navigator.onLine);
+
+  const [lastSyncedAt, setLastSyncedAt] =
+    useState(null);
+  useEffect(() => {
+    const savedProfile = loadProfile();
+
+    if (!savedProfile) {
+      return;
+    }
+
+    if (typeof savedProfile.userName === "string") {
+      setUserName(savedProfile.userName);
+    }
+
+    if (Array.isArray(savedProfile.selectedInterests)) {
+      setSelectedInterests(
+        savedProfile.selectedInterests
+      );
+    }
+
+    if (typeof savedProfile.selectedLocation === "string") {
+      setSelectedLocation(
+        savedProfile.selectedLocation
+      );
+    }
+  }, []);
+
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    saveProfile({
+      userName,
+      selectedInterests,
+      selectedLocation,
+    });
+  }, [
+    userName,
+    selectedInterests,
+    selectedLocation,
+  ]);
+
 
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
+
 
   const [showAssistant, setShowAssistant] =
     useState(false);
@@ -406,6 +468,19 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
+
+   useEffect(() => {
+    const savedAt = new Date().toISOString();
+
+    saveWeatherCache({
+      location: selectedLocation,
+      scenario: selectedScenario,
+      weather,
+      savedAt,
+    });
+
+    setLastSyncedAt(savedAt);
+  }, [selectedLocation, selectedScenario]);
 
   /* =========================================================
      INTEREST NAMES
@@ -1632,10 +1707,6 @@ const getPersonalImpact = (interestId) => {
    Deterministic safety decision — always above personalization
    ========================================================= */
 
-/* =========================================================
-   SAFETY OVERRIDE ENGINE
-   Deterministic safety decision — above personalization
-   ========================================================= */
 
 const safetyState = evaluateSafetyState({
   scenario: selectedScenario,
@@ -2297,7 +2368,7 @@ const emergencyMode = safetyOverride;
         </div>
 
         <div className="route-point">
-          🏢
+          🚗
         </div>
       </div>
 
@@ -3810,4 +3881,3 @@ const emergencyMode = safetyOverride;
 }
 
 export default App;
-
