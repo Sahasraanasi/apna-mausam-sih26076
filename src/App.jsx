@@ -1635,7 +1635,76 @@ const getPersonalImpact = (interestId) => {
         "Conditions are currently stable. Your personalized weather recommendations are active.",
       priority: "NORMAL",
     };
-  };
+  };/* =========================================================
+   PERSONAL IMPACT SCORE
+   Decision-support score — not weather prediction
+   ========================================================= */
+
+const getImpactScore = (type) => {
+  let score = 90;
+
+  if (type === "health") {
+    if (weather.aqi > 120) score -= 30;
+    else if (weather.aqi > 80) score -= 15;
+
+    if (weather.uv >= 8) score -= 20;
+    else if (weather.uv >= 7) score -= 12;
+
+    if (weather.humidity >= 80) score -= 10;
+    else if (weather.humidity >= 75) score -= 5;
+
+    if (selectedScenario === "rain") score -= 5;
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "fitness") {
+    if (weather.temperature >= 35) score -= 30;
+    else if (weather.temperature >= 32) score -= 20;
+    else if (weather.temperature >= 30) score -= 10;
+
+    if (weather.humidity >= 80) score -= 15;
+    else if (weather.humidity >= 75) score -= 8;
+
+    if (weather.uv >= 8) score -= 15;
+    else if (weather.uv >= 7) score -= 8;
+
+    if (weather.wind >= 30) score -= 15;
+    else if (weather.wind >= 25) score -= 8;
+
+    if (weather.rain >= 60) score -= 20;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  if (type === "agriculture") {
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.temperature >= 35) score -= 20;
+    else if (weather.temperature >= 32) score -= 10;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 20;
+  }
+
+  if (type === "commute") {
+    if (weather.visibility <= 3) score -= 35;
+    else if (weather.visibility <= 5) score -= 20;
+
+    if (weather.rain >= 80) score -= 25;
+    else if (weather.rain >= 60) score -= 15;
+
+    if (weather.wind >= 30) score -= 20;
+    else if (weather.wind >= 25) score -= 10;
+
+    if (selectedScenario === "severe") score = 15;
+  }
+
+  return Math.max(10, Math.min(100, score));
+};
+
   /* =========================================================
      SAFETY OVERRIDE ENGINE
      Deterministic safety decision — always above personalization
@@ -1867,6 +1936,22 @@ const getPersonalImpact = (interestId) => {
           ? "🫁 Air quality is elevated today. Consider reducing prolonged outdoor exposure."
           : "🫁 Air quality is suitable for normal outdoor activity."}
       </div>
+      <div className="impact-score-inline">
+  <div>
+    <span>Personal Health Impact</span>
+    <strong>{getImpactScore("health")}/100</strong>
+  </div>
+
+  <small>
+    {weather.aqi > 120
+      ? "Air quality is the main factor reducing your outdoor comfort."
+      : weather.uv >= 7
+      ? "Higher UV exposure is the main factor affecting outdoor comfort."
+      : weather.humidity >= 75
+      ? "Higher humidity may increase outdoor discomfort."
+      : "Current conditions are generally comfortable for health-focused outdoor activity."}
+  </small>
+</div>
     </section>
   );
 };
@@ -1950,6 +2035,24 @@ const getPersonalImpact = (interestId) => {
       ? "Early morning or evening is better because UV levels are high."
       : "Current conditions are generally suitable for outdoor activity."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Fitness Impact</span>
+    <strong>{getImpactScore("fitness")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant factor. Indoor exercise is safer."
+      : weather.rain >= 60
+      ? "Rain may disrupt outdoor workouts."
+      : weather.temperature >= 32
+      ? "High temperature may increase exercise discomfort."
+      : weather.uv >= 7
+      ? "UV exposure is elevated. Morning or evening is preferable."
+      : "Conditions are generally suitable for outdoor exercise."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2262,6 +2365,26 @@ const getPersonalImpact = (interestId) => {
           ? "Rain is likely. Monitor drainage and avoid unnecessary irrigation."
           : "Check soil moisture before irrigation or field work."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Agriculture Impact</span>
+    <strong>{getImpactScore("agriculture")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather may affect field activities. Monitor conditions before working outdoors."
+      : weather.rain >= 80
+      ? "Heavy rainfall may disrupt field work and harvesting."
+      : weather.rain >= 60
+      ? "Rain may affect field activities and outdoor work."
+      : weather.temperature >= 35
+      ? "High temperature may increase crop and field-work stress."
+      : weather.wind >= 25
+      ? "Stronger winds may affect outdoor field activities."
+      : "Current simulated conditions are generally manageable for field activities."}
+  </small>
+</div>
     </section>
   );
 };
@@ -2336,6 +2459,24 @@ const getPersonalImpact = (interestId) => {
           ? "Rain may slow traffic. Consider leaving earlier."
           : "Traffic is expected to move normally with good visibility."}
       </p>
+      <div className="impact-score-inline">
+  <div>
+    <span>Commute Impact</span>
+    <strong>{getImpactScore("commute")}/100</strong>
+  </div>
+
+  <small>
+    {selectedScenario === "severe"
+      ? "Severe weather is the dominant travel risk. Avoid unnecessary travel."
+      : weather.visibility <= 5
+      ? "Reduced visibility may affect driving conditions."
+      : weather.rain >= 60
+      ? "Heavy rain may slow travel and reduce visibility."
+      : weather.wind >= 25
+      ? "Stronger winds may make exposed routes more difficult."
+      : "Current simulated conditions are generally manageable for commuting."}
+  </small>
+</div>
     </section>
   );
 };

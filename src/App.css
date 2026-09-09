@@ -4065,3 +4065,43 @@ body,
   background: #fee2e2;
   color: #991b1b;
 }
+
+/* =========================================================
+   PERSONAL IMPACT SCORES
+   ========================================================= */
+
+.impact-score-inline {
+  margin-top: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(246, 248, 252, 0.95);
+  border: 1px solid rgba(215, 222, 239, 0.9);
+}
+
+.impact-score-inline > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.impact-score-inline span {
+  color: #707a91;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.impact-score-inline strong {
+  color: #28334f;
+  font-size: 20px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.impact-score-inline small {
+  display: block;
+  margin-top: 6px;
+  color: #858b9f;
+  font-size: 10px;
+  line-height: 1.5;
+}
