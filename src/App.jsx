@@ -1,3 +1,4 @@
+import { evaluateSafetyState } from "./safetyEngine";
 import { useState } from "react";
 import { assessSafety } from "./utils/safetyAssessment";
 import "./App.css";
@@ -415,9 +416,6 @@ function App() {
     weather,
   });
 
-const emergencyMode =
-  safetyAssessment.isEmergency;
-
   /* =========================================================
      INTEREST NAMES
      ========================================================= */
@@ -432,71 +430,286 @@ const emergencyMode =
           )?.title
       )
       .filter(Boolean);
+      /* =========================================================
+   PERSONAL WEATHER IMPACT
+   Transparent prototype heuristic — 0 to 100
+   ========================================================= */
+
+const getPersonalImpact = (interestId) => {
+  let score = 20;
+  const reasons = [];
+
+  /* WEATHER SEVERITY */
+  if (selectedScenario === "severe") {
+    score += 40;
+    reasons.push("Severe weather is active");
+  } else if (selectedScenario === "rain") {
+    score += 20;
+    reasons.push("Heavy rain is affecting conditions");
+  }
+
+  /* INTEREST-SPECIFIC WEATHER FACTORS */
+  if (interestId === "health") {
+    if (weather.aqi >= 120) {
+      score += 25;
+      reasons.push("Air quality is elevated");
+    }
+
+    if (weather.humidity >= 75) {
+      score += 10;
+      reasons.push("Humidity is high");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "fitness") {
+    if (weather.temperature >= 30) {
+      score += 20;
+      reasons.push("Temperature is high");
+    }
+
+    if (weather.humidity >= 75) {
+      score += 15;
+      reasons.push("High humidity may increase discomfort");
+    }
+
+    if (weather.wind >= 25) {
+      score += 15;
+      reasons.push("Wind may affect outdoor exercise");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "beach") {
+    if (weather.wind >= 25) {
+      score += 20;
+      reasons.push("Stronger wind may affect water conditions");
+    }
+
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("High rain probability");
+    }
+
+    if (selectedScenario === "severe") {
+      score += 20;
+      reasons.push("Severe conditions make water activities unsafe");
+    }
+  }
+
+  if (interestId === "travel") {
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Rain may disrupt travel");
+    }
+
+    if (weather.visibility <= 5) {
+      score += 20;
+      reasons.push("Visibility is reduced");
+    }
+
+    if (weather.wind >= 25) {
+      score += 10;
+      reasons.push("Wind may affect travel conditions");
+    }
+  }
+
+  if (interestId === "family") {
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Rain may affect outdoor family plans");
+    }
+
+    if (weather.temperature >= 30) {
+      score += 15;
+      reasons.push("Warm conditions may affect comfort");
+    }
+
+    if (weather.uv >= 7) {
+      score += 10;
+      reasons.push("UV exposure is high");
+    }
+  }
+
+  if (interestId === "agriculture") {
+    if (weather.rain >= 60) {
+      score += 25;
+      reasons.push("Heavy rain may affect field activities");
+    }
+
+    if (weather.wind >= 25) {
+      score += 15;
+      reasons.push("Strong wind may affect agricultural work");
+    }
+  }
+
+  if (interestId === "commute") {
+    if (weather.visibility <= 5) {
+      score += 25;
+      reasons.push("Reduced visibility may affect driving");
+    }
+
+    if (weather.rain >= 60) {
+      score += 20;
+      reasons.push("Heavy rain may slow travel");
+    }
+
+    if (weather.wind >= 30) {
+      score += 15;
+      reasons.push("Strong wind may affect driving");
+    }
+  }
+
+  if (interestId === "events") {
+    if (weather.rain >= 60) {
+      score += 25;
+      reasons.push("Rain may disrupt outdoor events");
+    }
+
+    if (weather.wind >= 30) {
+      score += 20;
+      reasons.push("Strong wind may affect event setup");
+    }
+
+    if (weather.temperature >= 32) {
+      score += 15;
+      reasons.push("High temperature may affect guest comfort");
+    }
+  }
+
+  /* SELECTED INTEREST = DIRECT PERSONAL RELEVANCE */
+  if (selectedInterests.includes(interestId)) {
+    score += 10;
+    reasons.push("Matches your selected interest");
+  }
+
+  /* SAFETY OVERRIDE ALWAYS WINS */
+ 
+  score = Math.min(100, score);
+
+  let status = "Low";
+
+  if (score >= 75) {
+    status = "Critical";
+  } else if (score >= 55) {
+    status = "High";
+  } else if (score >= 35) {
+    status = "Moderate";
+  }
+
+  return {
+    score,
+    status,
+    reasons:
+      reasons.length > 0
+        ? reasons
+        : ["Current weather has limited impact on this interest"],
+  };
+};
 
   /* =========================================================
      PERSONALIZATION PRIORITY
      ========================================================= */
 
   const getDynamicPriorityOrder = () => {
-    const normalPriority = [
-      ...selectedInterests,
-      ...interests
-        .map((interest) => interest.id)
-        .filter(
-          (id) =>
-            !selectedInterests.includes(id)
-        ),
-    ];
+    const scoredInterests = interests.map((interest) => {
+      const impact = getPersonalImpact(interest.id);
+
+      return {
+        id: interest.id,
+        score: impact.score,
+      };
+    });
 
     const scenarioPriority = {
       severe: [
         "health",
-        "commute",
         "family",
+        "commute",
         "travel",
         "fitness",
         "events",
-        "beach",
         "agriculture",
+        "beach",
       ],
 
       rain: [
         "commute",
         "family",
         "travel",
-        "events",
-        "fitness",
         "health",
+        "fitness",
+        "events",
         "agriculture",
         "beach",
       ],
-
-      normal: normalPriority,
     };
 
-    const preferredOrder =
-      scenarioPriority[selectedScenario] ||
-      normalPriority;
+    const selectedScenarioOrder =
+      scenarioPriority[selectedScenario] || [];
 
-    const selectedFirst = preferredOrder.filter(
-      (id) => selectedInterests.includes(id)
-    );
+    return [...scoredInterests]
+      .sort((a, b) => {
+        const aSelected = selectedInterests.includes(a.id);
+        const bSelected = selectedInterests.includes(b.id);
 
-    const remainingSelected =
-      selectedInterests.filter(
-        (id) => !selectedFirst.includes(id)
-      );
+        /* Safety/scenario priority comes first */
+        const aScenario =
+          selectedScenarioOrder.indexOf(a.id);
+        const bScenario =
+          selectedScenarioOrder.indexOf(b.id);
 
-    return [
-      ...selectedFirst,
-      ...remainingSelected,
-      ...interests
-        .map((interest) => interest.id)
-        .filter(
-          (id) =>
-            !selectedInterests.includes(id)
-        ),
-    ];
+        if (
+          aScenario !== -1 &&
+          bScenario !== -1 &&
+          aScenario !== bScenario
+        ) {
+          return aScenario - bScenario;
+        }
+
+        if (
+          aScenario !== -1 &&
+          bScenario === -1
+        ) {
+          return -1;
+        }
+
+        if (
+          aScenario === -1 &&
+          bScenario !== -1
+        ) {
+          return 1;
+        }
+
+        /* Selected interests win when scores are equal */
+        if (
+          aSelected &&
+          !bSelected &&
+          a.score === b.score
+        ) {
+          return -1;
+        }
+
+        if (
+          !aSelected &&
+          bSelected &&
+          a.score === b.score
+        ) {
+          return 1;
+        }
+
+        /* Higher weather impact score first */
+        return b.score - a.score;
+      })
+      .map((interest) => interest.id);
   };
 
   const priorityOrder =
@@ -1423,7 +1636,18 @@ const emergencyMode =
       priority: "NORMAL",
     };
   };
+  /* =========================================================
+     SAFETY OVERRIDE ENGINE
+     Deterministic safety decision — always above personalization
+     ========================================================= */
 
+  const safetyState = evaluateSafetyState({
+    scenario: selectedScenario,
+    weather,
+  });
+
+  const safetyOverride = safetyState.active;
+  const emergencyMode = safetyOverride;
   const smartAlert = getSmartAlert();
 
   /* =========================================================
@@ -1547,9 +1771,12 @@ const emergencyMode =
      HEALTH CARD
      ========================================================= */
 
-  const renderHealthCard = () => (
+  const renderHealthCard = () => {
+  const impact = getPersonalImpact("health");
+
+  return (
     <section
-      className="section-block"
+      className={`section-block impact-${impact.status.toLowerCase()}`}
       key="health"
     >
       <div className="section-title-row">
@@ -1642,14 +1869,18 @@ const emergencyMode =
       </div>
     </section>
   );
+};
 
   /* =========================================================
      FITNESS CARD
      ========================================================= */
 
-  const renderFitnessCard = () => (
+  const renderFitnessCard = () => {
+  const impact = getPersonalImpact("fitness");
+
+  return (
     <section
-      className="feature-card fitness-card"
+      className={`feature-card fitness-card impact-${impact.status.toLowerCase()}`}
       key="fitness"
     >
       <div className="feature-card-top">
@@ -1661,11 +1892,12 @@ const emergencyMode =
           FITNESS
         </span>
       </div>
-
       <h2>
         {selectedScenario === "severe"
-          ? "Outdoor workout paused"
-          : "Make the most of your workout window"}
+        ? "Outdoor workout paused"
+        : selectedScenario === "rain"
+        ? "Rain-aware workout plan"
+        : "Make the most of your workout window"}
       </h2>
 
       <div className="activity-window">
@@ -1711,21 +1943,27 @@ const emergencyMode =
 
       <p>
         {selectedScenario === "severe"
-          ? "Choose an indoor workout until conditions improve."
-          : weather.uv >= 7
-          ? "Early morning or evening is better because UV levels are high."
-          : "Current conditions are generally suitable for outdoor activity."}
+       ? "Choose an indoor workout until conditions improve."
+      : selectedScenario === "rain"
+      ? "Rain is affecting outdoor activity. Consider an indoor workout or wait for a safer window."
+      : weather.uv >= 7
+      ? "Early morning or evening is better because UV levels are high."
+      : "Current conditions are generally suitable for outdoor activity."}
       </p>
     </section>
   );
+};
 
   /* =========================================================
      BEACH CARD
      ========================================================= */
 
-  const renderBeachCard = () => (
+  const renderBeachCard = () => {
+  const impact = getPersonalImpact("beach");
+
+  return (
     <section
-      className="feature-card beach-card"
+      className={`feature-card beach-card impact-${impact.status.toLowerCase()}`}
       key="beach"
     >
       <div className="feature-card-top">
@@ -1737,6 +1975,11 @@ const emergencyMode =
           BEACH
         </span>
       </div>
+      <div className="impact-indicator">
+      <span>Weather impact</span>
+      <strong>{impact.score}/100</strong>
+      <small>{impact.status}</small>
+</div>
 
       <h2>Coastal conditions</h2>
 
@@ -1783,14 +2026,18 @@ const emergencyMode =
       </p>
     </section>
   );
+};
 
   /* =========================================================
      TRAVEL CARD
      ========================================================= */
 
-  const renderTravelCard = () => (
+  const renderTravelCard = () => {
+  const impact = getPersonalImpact("travel");
+
+  return (
     <section
-      className="feature-card travel-card"
+      className={`feature-card travel-card impact-${impact.status.toLowerCase()}`}
       key="travel"
     >
       <div className="feature-card-top">
@@ -1803,7 +2050,15 @@ const emergencyMode =
         </span>
       </div>
 
+      <div className="impact-indicator">
+        <span>Weather impact</span>
+        <strong>{impact.score}/100</strong>
+        <small>{impact.status}</small>
+      </div>
+
       <h2>Travel weather</h2>
+      
+      
 
       <div className="destination-box">
         <span>📍</span>
@@ -1851,14 +2106,18 @@ const emergencyMode =
       </div>
     </section>
   );
+};
 
   /* =========================================================
      FAMILY CARD
      ========================================================= */
 
-  const renderFamilyCard = () => (
+  const renderFamilyCard = () => {
+  const impact = getPersonalImpact("family");
+
+  return (
     <section
-      className="feature-card family-card"
+      className={`feature-card family-card impact-${impact.status.toLowerCase()}`}
       key="family"
     >
       <div className="feature-card-top">
@@ -1932,14 +2191,18 @@ const emergencyMode =
       </p>
     </section>
   );
+};
 
   /* =========================================================
      AGRICULTURE CARD
      ========================================================= */
 
-  const renderAgricultureCard = () => (
+  const renderAgricultureCard = () => {
+  const impact = getPersonalImpact("agriculture");
+
+  return (
     <section
-      className="feature-card agriculture-card"
+      className={`feature-card agriculture-card impact-${impact.status.toLowerCase()}`}
       key="agriculture"
     >
       <div className="feature-card-top">
@@ -2001,14 +2264,18 @@ const emergencyMode =
       </p>
     </section>
   );
+};
 
   /* =========================================================
      COMMUTE CARD
      ========================================================= */
 
-  const renderCommuteCard = () => (
+  const renderCommuteCard = () => {
+  const impact = getPersonalImpact("commute");
+
+  return (
     <section
-      className="feature-card commute-card"
+      className={`feature-card commute-card impact-${impact.status.toLowerCase()}`}
       key="commute"
     >
       <div className="feature-card-top">
@@ -2071,14 +2338,18 @@ const emergencyMode =
       </p>
     </section>
   );
+};
 
   /* =========================================================
      EVENTS CARD
      ========================================================= */
 
-  const renderEventsCard = () => (
+  const renderEventsCard = () => {
+  const impact = getPersonalImpact("events");
+
+  return (
     <section
-      className="feature-card events-card"
+      className={`feature-card events-card impact-${impact.status.toLowerCase()}`}
       key="events"
     >
       <div className="feature-card-top">
@@ -2185,6 +2456,7 @@ const emergencyMode =
       </div>
     </section>
   );
+};
 
   /* =========================================================
      PERSONALIZED CARDS
@@ -2227,18 +2499,33 @@ const emergencyMode =
               {safetyAssessment.title}
             </h2>
 
-            <p>
-              {safetyAssessment.message}
-            </p>
+<p>
+  {safetyAssessment.message}
+</p>
 
-            <strong>
-              {safetyAssessment.action}
-            </strong>
+<p>
+  Safety guidance is taking priority over
+  personalized recommendations.
+</p>
 
-            <small>
-              Safety Override is active and takes priority
-              over personalization.
-            </small>
+<div className="emergency-mode-meta">
+  <small>
+    Source: {safetyState.source}
+  </small>
+
+  <small>
+    Valid: {safetyState.validUntil}
+  </small>
+</div>
+
+<strong>
+  {safetyAssessment.action}
+</strong>
+
+<small>
+  Safety Override is active and takes priority
+  over personalization.
+</small>
           </div>
         </section>
       )}
@@ -2693,40 +2980,47 @@ const emergencyMode =
           </div>
 
           <div className="weather-metrics">
+  <div className="weather-main-temperature">
+    <span>Temperature</span>
+    <strong>{weather.temperature}°</strong>
+  </div>
 
-            <div>
-              <span>💧</span>
-              <strong>
-                {weather.humidity}%
-              </strong>
-              <small>Humidity</small>
-            </div>
+  <div className="weather-metric-list">
 
-            <div>
-              <span>💨</span>
-              <strong>
-                {weather.wind}
-              </strong>
-              <small>Wind km/h</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💧</span>
+      Humidity
+    </span>
+    <strong>{weather.humidity}%</strong>
+  </div>
 
-            <div>
-              <span>👁️</span>
-              <strong>
-                {weather.visibility}
-              </strong>
-              <small>Visibility</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">💨</span>
+      Wind
+    </span>
+    <strong>{weather.wind} km/h</strong>
+  </div>
 
-            <div>
-              <span>🌧️</span>
-              <strong>
-                {weather.rain}%
-              </strong>
-              <small>Rain</small>
-            </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">👁️</span>
+      Visibility
+    </span>
+    <strong>{weather.visibility} km</strong>
+  </div>
 
-          </div>
+  <div className="weather-metric-row">
+    <span className="weather-metric-label">
+      <span className="weather-metric-icon">🌧️</span>
+      Rain
+    </span>
+    <strong>{weather.rain}%</strong>
+  </div>
+  </div>
+
+</div>
 
           <p className="weather-smart-message">
             💡{" "}
@@ -3528,6 +3822,8 @@ const emergencyMode =
     </main>
 
   );
+
 }
 
 export default App;
+

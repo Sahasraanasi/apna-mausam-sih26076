@@ -3800,3 +3800,268 @@ body,
   color: #9f1239;
   line-height: 1.5;
 }
+.emergency-mode-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.emergency-mode-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #b91c1c;
+}
+
+.emergency-mode-content h2 {
+  margin: 0 0 7px;
+  font-size: 20px;
+  color: #7f1d1d;
+}
+
+.emergency-mode-content p {
+  margin: 0 0 10px;
+  color: #7f1d1d;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.emergency-mode-content strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #991b1b;
+  font-size: 13px;
+}
+
+.emergency-mode-content small {
+  display: block;
+  color: #7f1d1d;
+  font-size: 10px;
+  line-height: 1.4;
+}
+/* =========================================================
+   MAIN WEATHER WIDGET — TEMPERATURE + METRICS
+   ========================================================= */
+
+.weather-metrics {
+  display: grid;
+  grid-template-columns: minmax(140px, 0.8fr) minmax(0, 1.5fr);
+  gap: 24px;
+  align-items: center;
+  margin-top: 24px;
+}
+
+.weather-metrics > div {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.10);
+}
+
+.weather-metrics span {
+  order: 1;
+  font-size: 11px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.weather-metrics strong {
+  order: 2;
+  font-size: 18px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.weather-main-temperature {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 130px;
+}
+
+.weather-main-temperature span {
+  display: block;
+  margin-bottom: 6px;
+  color: rgba(255, 255, 255, 0.65);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.weather-main-temperature strong {
+  display: block;
+  color: #ffffff;
+  font-size: 52px;
+  line-height: 1;
+  font-weight: 800;
+}
+
+.weather-metric-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.weather-metric-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 4px;
+  gap: 16px;
+}
+
+.weather-metric-label {
+  display: flex !important;
+  align-items: center;
+  gap: 9px;
+  margin: 0 !important;
+  color: rgba(255, 255, 255, 0.88) !important;
+  font-size: 17px !important;
+  font-weight: 700 !important;
+}
+
+.weather-metric-icon {
+  width: 25px;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  margin: 0 !important;
+  font-size: 19px !important;
+  flex-shrink: 0;
+}
+
+.weather-metric-row > strong {
+  display: block !important;
+  margin: 0 0 0 auto !important;
+  color: #ffffff !important;
+  font-size: 18px !important;
+  font-weight: 800 !important;
+  white-space: nowrap;
+}
+
+/* Mobile */
+@media (max-width: 600px) {
+  .weather-metrics {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .weather-main-temperature {
+    min-height: auto;
+  }
+
+  .weather-main-temperature strong {
+    font-size: 44px;
+  }
+
+  .weather-metric-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .weather-metric-row {
+    min-height: 42px;
+    padding: 7px 2px;
+  }
+
+  .weather-metric-label {
+    font-size: 16px !important;
+  }
+
+  .weather-metric-row > strong {
+    font-size: 17px !important;
+  }
+}
+/* =========================================================
+   PERSONALIZATION IMPACT COLORS
+   Score-driven visual hierarchy
+   ========================================================= */
+
+.impact-low {
+  border-left: 5px solid #22c55e;
+}
+
+.impact-moderate {
+  border-left: 5px solid #eab308;
+}
+
+.impact-high {
+  border-left: 5px solid #f97316;
+}
+
+.impact-critical {
+  border-left: 5px solid #ef4444;
+}
+
+/* Slightly stronger visual treatment for high-impact cards */
+.feature-card.impact-low,
+.feature-card.impact-moderate,
+.feature-card.impact-high,
+.feature-card.impact-critical,
+.section-block.impact-low,
+.section-block.impact-moderate,
+.section-block.impact-high,
+.section-block.impact-critical {
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease,
+    transform 0.2s ease;
+}
+
+.feature-card.impact-high,
+.section-block.impact-high {
+  box-shadow: 0 14px 38px rgba(249, 115, 22, 0.14);
+}
+
+.feature-card.impact-critical,
+.section-block.impact-critical {
+  box-shadow: 0 14px 38px rgba(239, 68, 68, 0.18);
+}
+.impact-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 11px;
+}
+
+.impact-indicator span {
+  color: #707a91;
+  font-weight: 600;
+}
+
+.impact-indicator strong {
+  font-weight: 800;
+}
+
+.impact-indicator small {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.impact-low .impact-indicator small {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.impact-moderate .impact-indicator small {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.impact-high .impact-indicator small {
+  background: #ffedd5;
+  color: #9a3412;
+}
+
+.impact-critical .impact-indicator small {
+  background: #fee2e2;
+  color: #991b1b;
+}
