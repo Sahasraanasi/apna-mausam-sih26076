@@ -337,6 +337,8 @@ function App() {
 
   const [lastSyncedAt, setLastSyncedAt] =
     useState(null);
+  const [cachedWeather, setCachedWeather] =
+    useState(null);
   useEffect(() => {
     const savedProfile = loadProfile();
 
@@ -366,6 +368,16 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    const cached = loadWeatherCache();
+
+    if (!cached) {
+      return;
+    }
+
+    setCachedWeather(cached.weather);
+    setLastSyncedAt(cached.savedAt);
+  }, []);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
