@@ -333,6 +333,38 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [isOffline, setIsOffline] =
+    useState(!navigator.onLine);
+
+  const [lastSyncedAt, setLastSyncedAt] =
+    useState(null);
+
+  const [cachedWeather, setCachedWeather] =
+    useState(null);
+
+  useEffect(() => {
+    const cached = loadWeatherCache();
+
+    if (!cached) {
+      return;
+    }
+
+    setCachedWeather(cached.weather);
+    setLastSyncedAt(cached.savedAt);
+  }, []);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
   const [selectedScenario, setSelectedScenario] =
     useState("normal");
 
