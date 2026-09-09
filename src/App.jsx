@@ -330,6 +330,8 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [personalizationEnabled, setPersonalizationEnabled] =
+  useState(true);
   const [isOffline, setIsOffline] =
     useState(!navigator.onLine);
 
@@ -357,6 +359,11 @@ function App() {
         savedProfile.selectedLocation
       );
     }
+    if (typeof savedProfile.personalizationEnabled === "boolean") {
+      setPersonalizationEnabled(
+        savedProfile.personalizationEnabled
+      );
+    }
   }, []);
 
 
@@ -378,11 +385,13 @@ function App() {
       userName,
       selectedInterests,
       selectedLocation,
+      personalizationEnabled,
     });
   }, [
     userName,
     selectedInterests,
     selectedLocation,
+    personalizationEnabled,
   ]);
 
 
