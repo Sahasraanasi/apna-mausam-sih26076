@@ -1,6 +1,5 @@
 import { evaluateSafetyState } from "./safetyEngine";
 import { useEffect, useState } from "react";
-import { assessSafety } from "./utils/safetyAssessment";
 import {
   loadProfile,
   saveProfile,
@@ -493,11 +492,11 @@ function App() {
         ? "⛈️"
         : baseWeather.icon,
   };
-  const safetyAssessment =
-    assessSafety({
-      selectedScenario,
-      weather,
-    });
+  const safetyState = evaluateSafetyState({
+  scenario: selectedScenario,
+  });
+
+  const safetyOverride = safetyState.active;
 
   const displayedWeather =
     isOffline && cachedWeather
@@ -1806,13 +1805,6 @@ const getImpactScore = (type) => {
      SAFETY OVERRIDE ENGINE
      Deterministic safety decision — always above personalization
      ========================================================= */
-
-  const safetyState = evaluateSafetyState({
-    scenario: selectedScenario,
-    weather,
-  });
-
-  const safetyOverride = safetyState.active;
   const emergencyMode = safetyOverride;
   const smartAlert = getSmartAlert();
 
@@ -3000,11 +2992,11 @@ if (screen === "privacy") {
             </span>
 
             <h2>
-              {safetyAssessment.title}
+              {safetyState.message}
             </h2>
 
 <p>
-  {safetyAssessment.message}
+  {safetyState.reason}
 </p>
 
 <p>
@@ -3023,7 +3015,7 @@ if (screen === "privacy") {
 </div>
 
 <strong>
-  {safetyAssessment.action}
+  Stay indoors where possible and monitor official weather alerts.
 </strong>
 
 <small>

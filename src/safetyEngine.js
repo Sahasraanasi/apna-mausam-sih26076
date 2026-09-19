@@ -1,5 +1,5 @@
 /* =========================================================
-   MAUSAM SAFETY ENGINE
+   APNA MAUSAM SAFETY ENGINE
    Deterministic safety decision layer
 
    Safety decisions must not depend on personalization.
@@ -8,16 +8,13 @@
 
 const DEMO_SOURCE = "DEMO WEATHER SIMULATOR";
 
-export function evaluateSafetyState({
-  scenario,
-  weather,
-}) {
+export function evaluateSafetyState({ scenario }) {
   /*
    * Severe scenario is the controlled demonstration trigger.
    *
-   * This is intentionally deterministic:
-   * personalization, interests, and card ranking cannot
-   * disable an active safety condition.
+   * This decision is deterministic:
+   * personalization, interests, and recommendation ranking
+   * cannot disable or weaken an active safety condition.
    */
 
   if (scenario === "severe") {
@@ -27,26 +24,10 @@ export function evaluateSafetyState({
       mode: "emergency",
       reason:
         "Severe weather conditions are currently active in the prototype.",
-      action:
-        "Stay indoors, avoid unnecessary travel, and monitor official weather alerts.",
+      message:
+        "Severe weather conditions require your attention.",
       source: DEMO_SOURCE,
-      issuedAt: "Demo scenario start",
-      validUntil: "While severe scenario is active",
-    };
-  }
-
-  if (scenario === "rain") {
-    return {
-      active: false,
-      severity: "warning",
-      mode: "normal",
-      reason:
-        "Rain conditions are active, but the deterministic emergency threshold is not met.",
-      action:
-        "Use normal rain precautions and monitor changing conditions.",
-      source: DEMO_SOURCE,
-      issuedAt: "Demo scenario start",
-      validUntil: "While rain scenario is active",
+      validUntil: "Demo scenario active",
     };
   }
 
@@ -54,10 +35,9 @@ export function evaluateSafetyState({
     active: false,
     severity: "normal",
     mode: "normal",
-    reason: "No severe weather condition is active.",
-    action: "Continue normal activities with routine weather awareness.",
+    reason: "",
+    message: "",
     source: DEMO_SOURCE,
-    issuedAt: "Demo scenario start",
-    validUntil: "While normal scenario is active",
+    validUntil: "",
   };
 }
