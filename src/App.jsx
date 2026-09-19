@@ -6,6 +6,8 @@ import {
   saveProfile,
   loadWeatherCache,
   saveWeatherCache,
+  clearProfile,
+  clearWeatherCache,
 } from "./offlinePrivacy";
 import "./App.css";
 import {
@@ -2716,7 +2718,273 @@ const getImpactScore = (type) => {
   /* =========================================================
      HOME SCREEN
      ========================================================= */
+if (screen === "privacy") {
+  return (
+    <main className="personalization-screen">
+      <div className="personalization-content">
 
+        <div className="small-logo">
+          APNA MAUSAM
+        </div>
+
+        <div className="step-indicator">
+          PRIVACY CONTROLS
+        </div>
+
+        <h1>
+          Your data,
+          <span>{" "}your control.</span>
+        </h1>
+
+        <p className="personalization-subtitle">
+          Manage your local profile and personalization settings.
+        </p>
+
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "12px",
+            marginTop: "24px",
+          }}
+        >
+
+          {/* Personalization */}
+          <div
+            style={{
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "16px",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <strong>Personalization</strong>
+
+                <small
+                  style={{
+                    display: "block",
+                    color: "#64748b",
+                    marginTop: "5px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {personalizationEnabled
+                    ? "Personalized weather recommendations are enabled."
+                    : "Personalized weather recommendations are paused."}
+                </small>
+              </div>
+
+              <button
+                onClick={() =>
+                  setPersonalizationEnabled(
+                    (current) => !current
+                  )
+                }
+                style={{
+                  border: "none",
+                  borderRadius: "999px",
+                  padding: "8px 13px",
+                  fontSize: "12px",
+                  fontWeight: 800,
+                  cursor: "pointer",
+                  background: personalizationEnabled
+                    ? "#dcfce7"
+                    : "#e2e8f0",
+                  color: personalizationEnabled
+                    ? "#15803d"
+                    : "#475569",
+                  flexShrink: 0,
+                }}
+              >
+                {personalizationEnabled ? "ON" : "OFF"}
+              </button>
+            </div>
+
+            <small
+              style={{
+                display: "block",
+                color: "#94a3b8",
+                marginTop: "10px",
+                fontSize: "12px",
+              }}
+            >
+              Preference saved locally on this device.
+            </small>
+          </div>
+
+          {/* Location */}
+          <div
+            style={{
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "16px",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <strong>Location</strong>
+
+                <small
+                  style={{
+                    display: "block",
+                    color: "#64748b",
+                    marginTop: "5px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Current-location permission and manual
+                  location selection are supported.
+                </small>
+              </div>
+
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  color: "#15803d",
+                  flexShrink: 0,
+                }}
+              >
+                AVAILABLE
+              </span>
+            </div>
+          </div>
+
+          {/* Interaction learning */}
+          <div
+            style={{
+              padding: "16px 18px",
+              borderRadius: "18px",
+              background: "#ffffff",
+              border: "1px solid #e2e8f0",
+              textAlign: "left",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: "16px",
+              }}
+            >
+              <div style={{ minWidth: 0 }}>
+                <strong>Interaction learning</strong>
+
+                <small
+                  style={{
+                    display: "block",
+                    color: "#64748b",
+                    marginTop: "5px",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Interaction-based learning is not separately
+                  configurable in this prototype.
+                </small>
+              </div>
+
+              <span
+                style={{
+                  fontSize: "11px",
+                  fontWeight: 800,
+                  color: "#64748b",
+                  flexShrink: 0,
+                }}
+              >
+                DEMO
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        {/* Reset + Delete buttons */}
+        <div
+          style={{
+            display: "flex",
+            gap: "10px",
+            marginTop: "20px",
+          }}
+        >
+          <button
+            className="continue-button"
+            style={{
+              flex: 1,
+              margin: 0,
+            }}
+            onClick={() => {
+              clearProfile();
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Reset profile
+          </button>
+
+          <button
+            className="continue-button"
+            style={{
+              flex: 1,
+              margin: 0,
+            }}
+            onClick={() => {
+              clearProfile();
+              clearWeatherCache();
+              setCachedWeather(null);
+              setLastSyncedAt(null);
+              setUserName("");
+              setUserContact("");
+              setSelectedInterests([]);
+              setSelectedLocation("Hyderabad");
+              setScreen("welcome");
+            }}
+          >
+            Delete local data
+          </button>
+        </div>
+
+        <button
+          onClick={() => setScreen("home")}
+          style={{
+            marginTop: "14px",
+            border: "none",
+            background: "transparent",
+            color: "#64748b",
+            fontSize: "13px",
+            fontWeight: 700,
+            cursor: "pointer",
+          }}
+        >
+          ← Back to Apna Mausam
+        </button>
+
+      </div>
+    </main>
+  );
+}
   if (screen === "home") {
     return (
       <main className="weather-home">
@@ -2816,6 +3084,12 @@ const getImpactScore = (type) => {
             >
               👤
             </button>
+            <button
+  title="Privacy Controls"
+  onClick={() => setScreen("privacy")}
+>
+  🔒
+</button>
 
           </div>
 
@@ -3001,28 +3275,26 @@ const getImpactScore = (type) => {
               </span>
 
               <div>
+  <strong>
+    {selectedScenario ===
+    "normal"
+      ? "Normal conditions"
+      : selectedScenario ===
+        "rain"
+      ? "Heavy rain detected"
+      : "Severe weather detected"}
+  </strong>
 
-                <strong>
-                  {selectedScenario ===
-                  "normal"
-                    ? "Normal conditions"
-                    : selectedScenario ===
-                      "rain"
-                    ? "Heavy rain detected"
-                    : "Severe weather detected"}
-                </strong>
-
-                <small>
-                  {selectedScenario ===
-                  "normal"
-                    ? "Your normal personalized homepage is active."
-                    : selectedScenario ===
-                      "rain"
-                    ? "Apna Mausam is adapting recommendations to the changing weather."
-                    : "Apna Mausam has activated safety-focused recommendations."}
-                </small>
-
-              </div>
+  <small style={{ display: "block", marginTop: "4px" }}>
+    {selectedScenario ===
+    "normal"
+      ? "Your normal personalized homepage is active."
+      : selectedScenario ===
+        "rain"
+      ? "Apna Mausam is adapting recommendations to the changing weather."
+      : "Apna Mausam has activated safety-focused recommendations."}
+  </small>
+</div>
 
             </div>
 
