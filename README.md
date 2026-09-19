@@ -1,16 +1,101 @@
-# React + Vite
+# Apna Mausam
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+### Smart, personalized weather experience with safety-first automation
 
-Currently, two official plugins are available:
+**Smart India Hackathon 2026 — SIH26076**
+**Team: Climate Cryptics**
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Apna Mausam is a prototype for a personalized weather experience that combines contextual recommendations with a deterministic safety layer.
 
-## React Compiler
+The system is designed around one core principle:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+> **Personalization improves relevance, but safety always comes first.**
 
-## Expanding the ESLint configuration
+## Key Features
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+* 🌤️ **Personalized Weather Experience**
+  Presents weather information and recommendations based on user context and preferences.
+
+* 📍 **Location Selection**
+  Supports manual location selection and browser location permission. Hyderabad is used as the controlled demonstration location.
+
+* 🛡️ **Safety Override**
+  A deterministic safety layer takes priority over personalization when a severe-weather condition is active.
+
+* 🚨 **Emergency Mode**
+  Provides a single generic emergency state with clear safety guidance.
+
+* 📦 **Offline Support**
+  Previously cached weather information remains available when offline, with the cache/synchronization state shown to the user.
+
+* 🔐 **Privacy Controls**
+  Allows users to manage personalization and clear locally stored application data.
+
+## Prototype & Data Note
+
+This version uses **controlled demonstration scenarios and mock weather data** for the prototype.
+
+The demonstration data should **not be interpreted as live IMD data**.
+
+The architecture is designed so that approved weather/IMD data sources can be integrated in a future implementation.
+
+## Tech Stack
+
+* React
+* Vite
+* JavaScript
+* CSS
+* Browser Local Storage
+* Git & GitHub
+
+## Running Locally
+
+Clone the repository:
+
+```bash
+git clone https://github.com/Sahasraanasi/apna-mausam-sih26076.git
+cd apna-mausam-sih26076
+```
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Start the development server:
+
+```bash
+npm run dev
+```
+
+Create a production build:
+
+```bash
+npm run build
+```
+
+## Demo
+
+**Live Prototype:**
+https://apna-mausam-sih26076-navy.vercel.app/
+
+## Project Status
+
+**Working Prototype**
+
+The current prototype demonstrates:
+
+* Personalized weather presentation
+* Location permission and manual location selection
+* Deterministic Safety Override
+* Generic Emergency Mode
+* Offline cached weather state
+* Local privacy controls
+* Controlled demonstration scenarios
+
+## Team
+
+**Climate Cryptics**
+Smart India Hackathon 2026
+Problem Statement: **SIH26076**
