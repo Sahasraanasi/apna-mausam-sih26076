@@ -97,5 +97,7 @@ The current prototype demonstrates:
 ## Team
 
 **Climate Cryptics**
+
 Smart India Hackathon 2026
+
 Problem Statement: **SIH26076**
