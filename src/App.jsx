@@ -2,6 +2,8 @@ import { evaluateSafetyState } from "./safetyEngine";
 import { useEffect, useState } from "react";
 import { assessSafety } from "./utils/safetyAssessment";
 import {
+  loadProfile,
+  saveProfile,
   loadWeatherCache,
   saveWeatherCache,
 } from "./offlinePrivacy";
@@ -113,7 +115,7 @@ const locations = {
     advice:
       "Carry an umbrella or light rain jacket when heading outside.",
     locationNote:
-      "Mausam is prioritizing rain and travel conditions for Mumbai.",
+      "Apna Mausam is prioritizing rain and travel conditions for Mumbai.",
   },
 
   Delhi: {
@@ -159,7 +161,7 @@ const locations = {
     advice:
       "A light layer or umbrella could be useful if you're staying outdoors.",
     locationNote:
-      "Mausam is balancing comfortable temperatures with possible showers.",
+      "Apna Mausam is balancing comfortable temperatures with possible showers.",
   },
 
   Visakhapatnam: {
@@ -182,7 +184,7 @@ const locations = {
     advice:
       "Use sun protection and stay hydrated during prolonged outdoor activity.",
     locationNote:
-      "Mausam is highlighting coastal conditions for Visakhapatnam.",
+      "Apna Mausam is highlighting coastal conditions for Visakhapatnam.",
   },
 };
 
@@ -333,6 +335,8 @@ function App() {
 
   const [selectedLocation, setSelectedLocation] =
     useState("Hyderabad");
+  const [personalizationEnabled, setPersonalizationEnabled] =
+  useState(true);
   const [locationStatus, setLocationStatus] =
     useState("");
   const [isOffline, setIsOffline] =
@@ -343,6 +347,17 @@ function App() {
 
   const [cachedWeather, setCachedWeather] =
     useState(null);
+  useEffect(() => {
+  const savedProfile = loadProfile();
+
+  if (!savedProfile) return;
+
+  if (typeof savedProfile.personalizationEnabled === "boolean") {
+    setPersonalizationEnabled(
+      savedProfile.personalizationEnabled
+    );
+  }
+}, []);
 
   useEffect(() => {
     const cached = loadWeatherCache();
@@ -354,6 +369,11 @@ function App() {
     setCachedWeather(cached.weather);
     setLastSyncedAt(cached.savedAt);
   }, []);
+  useEffect(() => {
+  saveProfile({
+    personalizationEnabled,
+  });
+}, [personalizationEnabled]);
 
   useEffect(() => {
     const handleOnline = () => setIsOffline(false);
@@ -1048,7 +1068,7 @@ const getPersonalImpact = (interestId) => {
       question.includes("next high tide")
     ) {
       answer =
-        "The current prototype does not use live tide data. In a full Mausam implementation, the assistant would use location-specific tide timings.";
+        "The current prototype does not use live tide data. In a full Apna Mausam implementation, the assistant would use location-specific tide timings.";
     }
 
     else if (
@@ -1471,7 +1491,7 @@ const getPersonalImpact = (interestId) => {
       question.includes("extended forecast")
     ) {
       answer =
-        "The current prototype uses simulated weather data rather than a live extended forecast. In the full Mausam system, this section would show upcoming weather trends for event planning.";
+        "The current prototype uses simulated weather data rather than a live extended forecast. In the full Apna Mausam system, this section would show upcoming weather trends for event planning.";
     }
 
     /* =========================
@@ -1509,7 +1529,7 @@ const getPersonalImpact = (interestId) => {
 
     else {
       answer =
-        `Based on the current simulated conditions in ${selectedLocation}, the weather is ${weather.temperature}°C with ${weather.rain}% rain probability. Mausam recommends planning around the current weather conditions.`;
+        `Based on the current simulated conditions in ${selectedLocation}, the weather is ${weather.temperature}°C with ${weather.rain}% rain probability. Apna Mausam recommends planning around the current weather conditions.`;
     }
 
     setAssistantReply(answer);
@@ -2753,7 +2773,7 @@ const getImpactScore = (type) => {
 
           <div>
             <div className="app-logo">
-              MAUSAM
+              APNA MAUSAM
             </div>
 
             <div className="location">
@@ -2998,8 +3018,8 @@ const getImpactScore = (type) => {
                     ? "Your normal personalized homepage is active."
                     : selectedScenario ===
                       "rain"
-                    ? "Mausam is adapting recommendations to the changing weather."
-                    : "Mausam has activated safety-focused recommendations."}
+                    ? "Apna Mausam is adapting recommendations to the changing weather."
+                    : "Apna Mausam has activated safety-focused recommendations."}
                 </small>
 
               </div>
@@ -3032,7 +3052,7 @@ const getImpactScore = (type) => {
 
               <p>
                 Conditions have changed
-                significantly. Mausam has
+                significantly. Apna Mausam has
                 automatically adjusted your
                 recommendations.
               </p>
@@ -3189,7 +3209,7 @@ const getImpactScore = (type) => {
             <div>
 
               <p className="card-label">
-                YOUR MAUSAM
+                YOUR WEATHER PROFILE
               </p>
 
               <h2>
@@ -3558,7 +3578,7 @@ const getImpactScore = (type) => {
                 <div>
 
                   <strong>
-                    Ask Mausam
+                    Ask Apna Mausam
                   </strong>
 
                   <small>
@@ -3674,7 +3694,7 @@ const getImpactScore = (type) => {
             <div>
 
               <strong>
-                Ask Mausam
+                Ask Apna Mausam
               </strong>
 
               <small>
@@ -3708,7 +3728,7 @@ const getImpactScore = (type) => {
         <div className="personalization-content">
 
           <div className="small-logo">
-            MAUSAM
+            APNA MAUSAM
           </div>
 
           <div className="step-indicator">
@@ -3719,7 +3739,7 @@ const getImpactScore = (type) => {
             Welcome to
             <span>
               {" "}
-              Mausam.
+              Apna Mausam.
             </span>
           </h1>
 
@@ -3912,7 +3932,7 @@ const getImpactScore = (type) => {
         <div className="personalization-content">
 
           <div className="small-logo">
-            MAUSAM
+            APNA MAUSAM
           </div>
 
           <div className="step-indicator">
@@ -3923,7 +3943,7 @@ const getImpactScore = (type) => {
             Let's make
             <span>
               {" "}
-              Mausam yours.
+              Make your weather experience yours.
             </span>
           </h1>
 
@@ -4001,7 +4021,7 @@ const getImpactScore = (type) => {
             }
           >
 
-            Personalize My Mausam
+            Personalize My Weather
 
             <span>
               →
@@ -4070,7 +4090,7 @@ const getImpactScore = (type) => {
       <div className="welcome-content">
 
         <div className="logo">
-          MAUSAM
+          APNA MAUSAM
         </div>
 
         <div className="weather-icon">
